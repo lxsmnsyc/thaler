@@ -1,0 +1,98 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`action$ > should transform 1`] = `
+"import { $$clone as _$$clone } from \\"thaler/server\\";
+import { $$register as _$$register } from \\"thaler/server\\";
+import { action$ } from 'thaler';
+const _action = _$$register(\\"action\\", \\"http://localhost:3000/example/a4dc1948/0\\", form => {
+  const message = form.get('greeting') + ', ' + form.get('receiver') + '!';
+  return new Response(message, {
+    headers: {
+      'content-type': 'text/html'
+    },
+    status: 200
+  });
+});
+const example = _$$clone(_action);"
+`;
+
+exports[`action$ > should transform 2`] = `
+"import { $$clone as _$$clone } from \\"thaler/client\\";
+import { $$register as _$$register } from \\"thaler/client\\";
+import { action$ } from 'thaler';
+const _action = _$$register(\\"action\\", \\"http://localhost:3000/example/a4dc1948/0\\");
+const example = _$$clone(_action);"
+`;
+
+exports[`function$ > should transform 1`] = `
+"import { $$clone as _$$clone } from \\"thaler/server\\";
+import { $$scope as _$$scope } from \\"thaler/server\\";
+import { $$register as _$$register } from \\"thaler/server\\";
+import { function$ } from 'thaler';
+const PREFIX = 'Message: ';
+const _function = _$$register(\\"function\\", \\"http://localhost:3000/example/a4dc1948/0\\", ({
+  greeting,
+  receiver
+}) => {
+  const [PREFIX] = _$$scope();
+  const message = PREFIX + greeting + ', ' + receiver + '!';
+  return message;
+});
+const example = _$$clone(_function, [PREFIX]);"
+`;
+
+exports[`function$ > should transform 2`] = `
+"import { $$clone as _$$clone } from \\"thaler/client\\";
+import { $$register as _$$register } from \\"thaler/client\\";
+import { function$ } from 'thaler';
+const PREFIX = 'Message: ';
+const _function = _$$register(\\"function\\", \\"http://localhost:3000/example/a4dc1948/0\\");
+const example = _$$clone(_function, [PREFIX]);"
+`;
+
+exports[`loader$ > should transform 1`] = `
+"import { $$clone as _$$clone } from \\"thaler/server\\";
+import { $$register as _$$register } from \\"thaler/server\\";
+import { loader$ } from 'thaler';
+const _loader = _$$register(\\"loader\\", \\"http://localhost:3000/example/a4dc1948/0\\", search => {
+  const message = search.get('greeting') + ', ' + search.get('receiver') + '!';
+  return new Response(message, {
+    headers: {
+      'content-type': 'text/html'
+    },
+    status: 200
+  });
+});
+const example = _$$clone(_loader);"
+`;
+
+exports[`loader$ > should transform 2`] = `
+"import { $$clone as _$$clone } from \\"thaler/client\\";
+import { $$register as _$$register } from \\"thaler/client\\";
+import { loader$ } from 'thaler';
+const _loader = _$$register(\\"loader\\", \\"http://localhost:3000/example/a4dc1948/0\\");
+const example = _$$clone(_loader);"
+`;
+
+exports[`server$ > should transform 1`] = `
+"import { $$clone as _$$clone } from \\"thaler/server\\";
+import { $$register as _$$register } from \\"thaler/server\\";
+import { server$ } from 'thaler';
+const _server = _$$register(\\"server\\", \\"http://localhost:3000/example/a4dc1948/0\\", request => {
+  return new Response('Hello World', {
+    headers: {
+      'content-type': 'text/html'
+    },
+    status: 200
+  });
+});
+const example = _$$clone(_server);"
+`;
+
+exports[`server$ > should transform 2`] = `
+"import { $$clone as _$$clone } from \\"thaler/client\\";
+import { $$register as _$$register } from \\"thaler/client\\";
+import { server$ } from 'thaler';
+const _server = _$$register(\\"server\\", \\"http://localhost:3000/example/a4dc1948/0\\");
+const example = _$$clone(_server);"
+`;
