@@ -1,32 +1,44 @@
 import seroval, { ServerValue } from 'seroval';
 import {
   ThalerActionHandler,
+  ThalerActionParam,
   ThalerFunctionHandler,
   ThalerFunctions,
   ThalerLoaderHandler,
+  ThalerLoaderParam,
   ThalerServerHandler,
 } from '../shared/types';
-import { FunctionBody, patchHeaders, serializeFunctionBody } from '../shared/utils';
+import {
+  fromFormData,
+  fromURLSearchParams,
+  FunctionBody,
+  patchHeaders,
+  serializeFunctionBody,
+  toFormData,
+  toURLSearchParams,
+} from '../shared/utils';
 
 type ServerHandlerRegistration = [type: 'server', id: string, callback: ThalerServerHandler];
-type LoaderHandlerRegistration = [type: 'loader', id: string, callback: ThalerLoaderHandler];
-type ActionHandlerRegistration = [type: 'action', id: string, callback: ThalerActionHandler];
+type LoaderHandlerRegistration<P extends ThalerLoaderParam> =
+  [type: 'loader', id: string, callback: ThalerLoaderHandler<P>];
+type ActionHandlerRegistration<P extends ThalerActionParam> =
+  [type: 'action', id: string, callback: ThalerActionHandler<P>];
 type FunctionHandlerRegistration<T extends ServerValue, R extends ServerValue> =
   [type: 'function', id: string, callback: ThalerFunctionHandler<T, R>];
 
-type HandlerRegistration<T extends ServerValue, R extends ServerValue> =
+type HandlerRegistration =
   | ServerHandlerRegistration
-  | LoaderHandlerRegistration
-  | ActionHandlerRegistration
-  | FunctionHandlerRegistration<T, R>;
+  | LoaderHandlerRegistration<any>
+  | ActionHandlerRegistration<any>
+  | FunctionHandlerRegistration<any, any>;
 
-const REGISTRATIONS = new Map<string, HandlerRegistration<ServerValue, ServerValue>>();
+const REGISTRATIONS = new Map<string, HandlerRegistration>();
 
-export function $$register<T extends ServerValue, R extends ServerValue>(
-  ...registration: HandlerRegistration<T, R>
-): HandlerRegistration<T, R> {
+export function $$register(
+  ...registration: HandlerRegistration
+): HandlerRegistration {
   const url = new URL(registration[1]);
-  REGISTRATIONS.set(url.pathname, registration as HandlerRegistration<ServerValue, ServerValue>);
+  REGISTRATIONS.set(url.pathname, registration);
   return registration;
 }
 
@@ -40,29 +52,29 @@ async function serverHandler(
   return callback(request);
 }
 
-async function actionHandler(
+async function actionHandler<P extends ThalerActionParam>(
   id: string,
-  callback: ThalerActionHandler,
-  formData: FormData,
+  callback: ThalerActionHandler<P>,
+  formData: P,
   init: RequestInit = {},
 ) {
   patchHeaders(init, 'action');
   const request = new Request(id, {
     ...init,
     method: 'POST',
-    body: formData,
+    body: toFormData(formData),
   });
   return callback(formData, request);
 }
 
-async function loaderHandler(
+async function loaderHandler<P extends ThalerLoaderParam>(
   id: string,
-  callback: ThalerLoaderHandler,
-  search: URLSearchParams,
+  callback: ThalerLoaderHandler<P>,
+  search: P,
   init: RequestInit = {},
 ) {
   patchHeaders(init, 'loader');
-  const request = new Request(`${id}?${search.toString()}`, {
+  const request = new Request(`${id}?${toURLSearchParams(search).toString()}`, {
     ...init,
     method: 'GET',
   });
@@ -103,10 +115,10 @@ export function $$scope(): ServerValue[] {
   return SCOPE!;
 }
 
-export function $$clone<T extends ServerValue, R extends ServerValue>(
-  [type, id, callback]: HandlerRegistration<T, R>,
+export function $$clone(
+  [type, id, callback]: HandlerRegistration,
   scope: ServerValue[],
-): ThalerFunctions<T, R> {
+): ThalerFunctions {
   switch (type) {
     case 'server':
       return Object.assign(serverHandler.bind(null, id, callback), {
@@ -124,7 +136,7 @@ export function $$clone<T extends ServerValue, R extends ServerValue>(
         id,
       });
     case 'function':
-      return Object.assign((functionHandler<T, R>).bind(null, id, callback, scope), {
+      return Object.assign(functionHandler.bind(null, id, callback, scope), {
         type,
         id,
       });
@@ -145,12 +157,12 @@ export async function handleRequest(request: Request): Promise<Response | undefi
           return await callback(request);
         case 'action':
           return await callback(
-            await request.formData(),
+            fromFormData(await request.formData()),
             request,
           );
         case 'loader':
           return await callback(
-            url.searchParams,
+            fromURLSearchParams(url.searchParams),
             request,
           );
         case 'function': {

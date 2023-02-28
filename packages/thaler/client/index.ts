@@ -2,11 +2,18 @@ import { ServerValue } from 'seroval';
 import ThalerError from '../shared/error';
 import {
   ThalerActionInit,
+  ThalerActionParam,
   ThalerFunctionInit,
   ThalerFunctions,
   ThalerLoaderInit,
+  ThalerLoaderParam,
 } from '../shared/types';
-import { patchHeaders, serializeFunctionBody } from '../shared/utils';
+import {
+  patchHeaders,
+  serializeFunctionBody,
+  toFormData,
+  toURLSearchParams,
+} from '../shared/utils';
 
 type ServerHandlerRegistration = [type: 'server', id: string];
 type LoaderHandlerRegistration = [type: 'loader', id: string];
@@ -36,24 +43,24 @@ async function serverHandler(type: HandlerRegistration[0], id: string, init: Req
   return result;
 }
 
-async function actionHandler(
+async function actionHandler<P extends ThalerActionParam>(
   id: string,
-  form: FormData,
+  form: P,
   init: ThalerActionInit = {},
 ) {
   return serverHandler('action', id, {
     ...init,
     method: 'POST',
-    body: form,
+    body: toFormData(form),
   });
 }
 
-async function loaderHandler(
+async function loaderHandler<P extends ThalerLoaderParam>(
   id: string,
-  search: URLSearchParams,
+  search: P,
   init: ThalerLoaderInit = {},
 ) {
-  return serverHandler('loader', `${id}?${search.toString()}`, {
+  return serverHandler('loader', `${id}?${toURLSearchParams(search).toString()}`, {
     ...init,
     method: 'GET',
   });
@@ -78,10 +85,10 @@ async function functionHandler<T extends ServerValue, R extends ServerValue>(
   throw new ThalerError(id);
 }
 
-export function $$clone<T extends ServerValue, R extends ServerValue>(
+export function $$clone(
   { type, id }: HandlerRegistrationResult,
   scope: ServerValue[],
-): ThalerFunctions<T, R> {
+): ThalerFunctions {
   switch (type) {
     case 'server':
       return Object.assign(serverHandler.bind(null, 'server', id), {
@@ -99,7 +106,7 @@ export function $$clone<T extends ServerValue, R extends ServerValue>(
         id,
       });
     case 'function':
-      return Object.assign((functionHandler<T, R>).bind(null, id, scope), {
+      return Object.assign(functionHandler.bind(null, id, scope), {
         type,
         id,
       });

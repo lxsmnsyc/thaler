@@ -17,6 +17,9 @@ module.exports = {
     "no-continue": "off",
     "no-param-reassign": "off",
     "no-restricted-syntax": "off",
-    "no-bitwise": "off"
+    "no-bitwise": "off",
+    "@typescript-eslint/no-unsafe-argument": "off",
+    "@typescript-eslint/no-unsafe-assignment": "off",
+    "@typescript-eslint/no-unsafe-return": "off"
   }
 };
