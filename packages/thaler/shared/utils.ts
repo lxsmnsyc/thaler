@@ -1,5 +1,5 @@
 import seroval, { ServerValue } from 'seroval';
-import { ThalerActionParam, ThalerFunctionTypes, ThalerLoaderParam } from './types';
+import { ThalerPostParam, ThalerFunctionTypes, ThalerGetParam } from './types';
 
 export const XThalerRequestType = 'X-Thaler-Request-Type';
 
@@ -24,8 +24,8 @@ export function serializeFunctionBody({ scope, value }: FunctionBody) {
   return seroval({ scope, value });
 }
 
-export function fromFormData<T extends ThalerActionParam>(formData: FormData): T {
-  const source: ThalerActionParam = {};
+export function fromFormData<T extends ThalerPostParam>(formData: FormData): T {
+  const source: ThalerPostParam = {};
   formData.forEach((value, key) => {
     if (key in source) {
       const current = source[key];
@@ -41,7 +41,7 @@ export function fromFormData<T extends ThalerActionParam>(formData: FormData): T
   return source as T;
 }
 
-export function toFormData<T extends ThalerActionParam>(source: T): FormData {
+export function toFormData<T extends ThalerPostParam>(source: T): FormData {
   const formData = new FormData();
   for (const [key, value] of Object.entries(source)) {
     if (Array.isArray(value)) {
@@ -61,8 +61,8 @@ export function toFormData<T extends ThalerActionParam>(source: T): FormData {
   return formData;
 }
 
-export function fromURLSearchParams<T extends ThalerLoaderParam>(search: URLSearchParams): T {
-  const source: ThalerLoaderParam = {};
+export function fromURLSearchParams<T extends ThalerGetParam>(search: URLSearchParams): T {
+  const source: ThalerGetParam = {};
   for (const [key, value] of search.entries()) {
     if (key in source) {
       const current = source[key];
@@ -78,7 +78,7 @@ export function fromURLSearchParams<T extends ThalerLoaderParam>(search: URLSear
   return source as T;
 }
 
-export function toURLSearchParams<T extends ThalerLoaderParam>(source: T): URLSearchParams {
+export function toURLSearchParams<T extends ThalerGetParam>(source: T): URLSearchParams {
   const search = new URLSearchParams();
   for (const [key, value] of Object.entries(source)) {
     if (Array.isArray(value)) {
