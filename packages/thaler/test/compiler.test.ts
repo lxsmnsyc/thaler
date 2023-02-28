@@ -80,14 +80,14 @@ const example = action$(({ greeting, receiver }) => {
     expect(await compile('client', code)).toMatchSnapshot();
   });
 });
-describe('function$', () => {
+describe('fn$', () => {
   it('should transform', async () => {
     const code = `
-import { function$ } from 'thaler';
+import { fn$ } from 'thaler';
 
 const PREFIX = 'Message: ';
 
-const example = function$(({ greeting, receiver }) => {
+const example = fn$(({ greeting, receiver }) => {
   const message = PREFIX + greeting + ', ' + receiver + '!';
   return message;
 });

@@ -27,11 +27,11 @@ const _action = _$$register(\\"action\\", \\"http://localhost:3000/example/a4dc1
 const example = _$$clone(_action);"
 `;
 
-exports[`function$ > should transform 1`] = `
+exports[`fn$ > should transform 1`] = `
 "import { $$clone as _$$clone } from \\"thaler/server\\";
 import { $$scope as _$$scope } from \\"thaler/server\\";
 import { $$register as _$$register } from \\"thaler/server\\";
-import { function$ } from 'thaler';
+import { fn$ } from 'thaler';
 const PREFIX = 'Message: ';
 const _function = _$$register(\\"function\\", \\"http://localhost:3000/example/a4dc1948-0\\", ({
   greeting,
@@ -44,10 +44,10 @@ const _function = _$$register(\\"function\\", \\"http://localhost:3000/example/a
 const example = _$$clone(_function, [PREFIX]);"
 `;
 
-exports[`function$ > should transform 2`] = `
+exports[`fn$ > should transform 2`] = `
 "import { $$clone as _$$clone } from \\"thaler/client\\";
 import { $$register as _$$register } from \\"thaler/client\\";
-import { function$ } from 'thaler';
+import { fn$ } from 'thaler';
 const PREFIX = 'Message: ';
 const _function = _$$register(\\"function\\", \\"http://localhost:3000/example/a4dc1948-0\\");
 const example = _$$clone(_function, [PREFIX]);"

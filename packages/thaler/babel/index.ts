@@ -23,7 +23,7 @@ const TRACKED_IMPORTS: Record<string, TrackedImport> = {
   server$: { type: 'server', scoping: false },
   action$: { type: 'action', scoping: false },
   loader$: { type: 'loader', scoping: false },
-  function$: { type: 'function', scoping: true },
+  fn$: { type: 'function', scoping: true },
 };
 
 const SOURCE_MODULE = 'thaler';

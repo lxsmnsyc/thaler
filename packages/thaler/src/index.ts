@@ -29,8 +29,8 @@ export function loader$<P extends ThalerLoaderParam>(
   throw new Error('loader$ cannot be called during runtime.');
 }
 
-export function function$<T extends ServerValue, R extends ServerValue>(
+export function fn$<T extends ServerValue, R extends ServerValue>(
   handler: ThalerFunctionHandler<T, R>,
 ): ThalerFunction<T, R> {
-  throw new Error('function$ cannot be called during runtime.');
+  throw new Error('fn$ cannot be called during runtime.');
 }
