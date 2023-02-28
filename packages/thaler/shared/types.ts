@@ -20,7 +20,7 @@ export interface ThalerBaseFunction {
 
 export interface ThalerServerFunction extends ThalerBaseFunction {
   type: 'server';
-  (request: RequestInit): Promise<Response>;
+  (init: RequestInit): Promise<Response>;
 }
 
 export type ThalerActionInit = Omit<RequestInit, 'method' | 'body'>;
