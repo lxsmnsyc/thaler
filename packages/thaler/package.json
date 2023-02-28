@@ -44,18 +44,72 @@
     "dev": "pridepack dev",
     "test": "vitest"
   },
-  "private": false,
-  "description": "Utility server functions",
+  "description": "Isomorphic server-side functions",
   "repository": {
-    "url": "https://github.com/lxsmnsyc/thaler",
+    "url": "https://github.com/lxsmnsyc/thaler.git",
     "type": "git"
   },
-  "homepage": "https://github.com/lxsmnsyc/thaler",
+  "homepage": "https://github.com/lxsmnsyc/thaler/tree/main/packages/thaler",
   "bugs": {
     "url": "https://github.com/lxsmnsyc/thaler/issues"
   },
-  "author": "Alexis Munsayac",
   "publishConfig": {
     "access": "public"
+  },
+  "author": "Alexis Munsayac",
+  "private": false,
+  "typesVersions": {
+    "*": {
+      "babel": [
+        "./dist/types/babel/index.d.ts"
+      ],
+      "client": [
+        "./dist/types/client/index.d.ts"
+      ],
+      "server": [
+        "./dist/types/server/index.d.ts"
+      ]
+    }
+  },
+  "types": "./dist/types/src/index.d.ts",
+  "main": "./dist/cjs/production/index.js",
+  "module": "./dist/esm/production/index.js",
+  "exports": {
+    ".": {
+      "development": {
+        "require": "./dist/cjs/development/index.js",
+        "import": "./dist/esm/development/index.js"
+      },
+      "require": "./dist/cjs/production/index.js",
+      "import": "./dist/esm/production/index.js",
+      "types": "./dist/types/src/index.d.ts"
+    },
+    "./babel": {
+      "development": {
+        "require": "./dist/cjs/development/babel.js",
+        "import": "./dist/esm/development/babel.js"
+      },
+      "require": "./dist/cjs/production/babel.js",
+      "import": "./dist/esm/production/babel.js",
+      "types": "./dist/types/babel/index.d.ts"
+    },
+    "./client": {
+      "development": {
+        "require": "./dist/cjs/development/client.js",
+        "import": "./dist/esm/development/client.js"
+      },
+      "require": "./dist/cjs/production/client.js",
+      "import": "./dist/esm/production/client.js",
+      "types": "./dist/types/client/index.d.ts"
+    },
+    "./server": {
+      "development": {
+        "require": "./dist/cjs/development/server.js",
+        "import": "./dist/esm/development/server.js"
+      },
+      "require": "./dist/cjs/production/server.js",
+      "import": "./dist/esm/production/server.js",
+      "types": "./dist/types/server/index.d.ts"
+    }
   }
 }
