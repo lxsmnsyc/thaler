@@ -214,7 +214,7 @@ function getPrefix(ctx: State) {
   } else if (ctx.filename) {
     file = ctx.filename;
   }
-  return `${ctx.opts.origin}/${prefix}/${xxHash32(file).toString(16)}/`;
+  return `${ctx.opts.origin}/${prefix}/${xxHash32(file).toString(16)}-`;
 }
 
 export default function thalerPlugin(): babel.PluginObj<State> {
