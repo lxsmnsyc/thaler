@@ -1,11 +1,11 @@
 import seroval, { ServerValue } from 'seroval';
 import {
-  ThalerActionHandler,
-  ThalerActionParam,
-  ThalerFunctionHandler,
+  ThalerPostHandler,
+  ThalerPostParam,
+  ThalerFnHandler,
   ThalerFunctions,
-  ThalerLoaderHandler,
-  ThalerLoaderParam,
+  ThalerGetHandler,
+  ThalerGetParam,
   ThalerPureHandler,
   ThalerServerHandler,
 } from '../shared/types';
@@ -20,19 +20,19 @@ import {
 } from '../shared/utils';
 
 type ServerHandlerRegistration = [type: 'server', id: string, callback: ThalerServerHandler];
-type LoaderHandlerRegistration<P extends ThalerLoaderParam> =
-  [type: 'loader', id: string, callback: ThalerLoaderHandler<P>];
-type ActionHandlerRegistration<P extends ThalerActionParam> =
-  [type: 'action', id: string, callback: ThalerActionHandler<P>];
+type GetHandlerRegistration<P extends ThalerGetParam> =
+  [type: 'get', id: string, callback: ThalerGetHandler<P>];
+type PostHandlerRegistration<P extends ThalerPostParam> =
+  [type: 'post', id: string, callback: ThalerPostHandler<P>];
 type FunctionHandlerRegistration<T extends ServerValue, R extends ServerValue> =
-  [type: 'function', id: string, callback: ThalerFunctionHandler<T, R>];
+  [type: 'fn', id: string, callback: ThalerFnHandler<T, R>];
 type PureHandlerRegistration<T extends ServerValue, R extends ServerValue> =
   [type: 'pure', id: string, callback: ThalerPureHandler<T, R>];
 
 type HandlerRegistration =
   | ServerHandlerRegistration
-  | LoaderHandlerRegistration<any>
-  | ActionHandlerRegistration<any>
+  | GetHandlerRegistration<any>
+  | PostHandlerRegistration<any>
   | FunctionHandlerRegistration<any, any>
   | PureHandlerRegistration<any, any>;
 
@@ -56,13 +56,13 @@ async function serverHandler(
   return callback(request);
 }
 
-async function actionHandler<P extends ThalerActionParam>(
+async function actionHandler<P extends ThalerPostParam>(
   id: string,
-  callback: ThalerActionHandler<P>,
+  callback: ThalerPostHandler<P>,
   formData: P,
   init: RequestInit = {},
 ) {
-  patchHeaders(init, 'action');
+  patchHeaders(init, 'post');
   const request = new Request(id, {
     ...init,
     method: 'POST',
@@ -71,13 +71,13 @@ async function actionHandler<P extends ThalerActionParam>(
   return callback(formData, request);
 }
 
-async function loaderHandler<P extends ThalerLoaderParam>(
+async function getHandler<P extends ThalerGetParam>(
   id: string,
-  callback: ThalerLoaderHandler<P>,
+  callback: ThalerGetHandler<P>,
   search: P,
   init: RequestInit = {},
 ) {
-  patchHeaders(init, 'loader');
+  patchHeaders(init, 'get');
   const request = new Request(`${id}?${toURLSearchParams(search).toString()}`, {
     ...init,
     method: 'GET',
@@ -97,14 +97,14 @@ function runWithScope<T>(scope: ServerValue[], callback: () => T): T {
   }
 }
 
-async function functionHandler<T extends ServerValue, R extends ServerValue>(
+async function fnHandler<T extends ServerValue, R extends ServerValue>(
   id: string,
-  callback: ThalerFunctionHandler<T, R>,
+  callback: ThalerFnHandler<T, R>,
   scope: ServerValue[],
   value: T,
   init: RequestInit = {},
 ) {
-  patchHeaders(init, 'function');
+  patchHeaders(init, 'fn');
   return runWithScope(scope, () => {
     const request = new Request(id, {
       ...init,
@@ -121,7 +121,7 @@ async function pureHandler<T extends ServerValue, R extends ServerValue>(
   value: T,
   init: RequestInit = {},
 ) {
-  patchHeaders(init, 'function');
+  patchHeaders(init, 'fn');
   const request = new Request(id, {
     ...init,
     method: 'POST',
@@ -144,18 +144,18 @@ export function $$clone(
         type,
         id,
       });
-    case 'action':
+    case 'post':
       return Object.assign(actionHandler.bind(null, id, callback), {
         type,
         id,
       });
-    case 'loader':
-      return Object.assign(loaderHandler.bind(null, id, callback), {
+    case 'get':
+      return Object.assign(getHandler.bind(null, id, callback), {
         type,
         id,
       });
-    case 'function':
-      return Object.assign(functionHandler.bind(null, id, callback, scope), {
+    case 'fn':
+      return Object.assign(fnHandler.bind(null, id, callback, scope), {
         type,
         id,
       });
@@ -179,17 +179,17 @@ export async function handleRequest(request: Request): Promise<Response | undefi
       switch (type) {
         case 'server':
           return await callback(request);
-        case 'action':
+        case 'post':
           return await callback(
             fromFormData(await request.formData()),
             request,
           );
-        case 'loader':
+        case 'get':
           return await callback(
             fromURLSearchParams(url.searchParams),
             request,
           );
-        case 'function': {
+        case 'fn': {
           // eslint-disable-next-line no-eval
           const { scope, value } = (0, eval)(await request.text()) as FunctionBody;
           const result = await runWithScope(scope, () => callback(value, request));

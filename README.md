@@ -55,16 +55,16 @@ const response = await getMessage({
 console.log(await response.text()); // Hello, World!
 ```
 
-### `loader$`
+### `get$`
 
 Similar to `server$` except that it can receive an object that can be converted into query params. The object can have a string or an array of strings as its values.
 
-Only `loader$` can accept search parameters and uses the `GET` method, which makes it great for creating server-side logic that utilizes caching.
+Only `get$` can accept search parameters and uses the `GET` method, which makes it great for creating server-side logic that utilizes caching.
 
 ```js
-import { loader$ } from 'thaler';
+import { get$ } from 'thaler';
 
-const getMessage = loader$(async ({ greeting, receiver }) => {
+const getMessage = get$(async ({ greeting, receiver }) => {
   return new Response(`${greeting}, ${receiver}!`, {
     status: 200,
   });
@@ -79,12 +79,12 @@ const response = await getMessage({
 console.log(await response.text()); // Hello, World!
 ```
 
-You can also pass some request configuration (same as `server$`) as the second parameter for the function, however `loader$` cannot have `method` or `body`. The callback in `loader$` can also receive the `Request` instance as the second parameter.
+You can also pass some request configuration (same as `server$`) as the second parameter for the function, however `get$` cannot have `method` or `body`. The callback in `get$` can also receive the `Request` instance as the second parameter.
 
 ```js
-import { loader$ } from 'thaler';
+import { get$ } from 'thaler';
 
-const getUser = loader$((search, request) => {
+const getUser = get$((search, request) => {
   // do stuff
 });
 
@@ -95,16 +95,16 @@ const user = await getUser(search, {
 });
 ```
 
-### `action$`
+### `post$`
 
-If `loader$` is for `GET`, `action$` is for `POST`. Instead of query parameters, the object it receives is converted into form data, so the object can accept not only a string or an array of strings, but also a [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob), a [`File`](https://developer.mozilla.org/en-US/docs/Web/API/File), or an array of either of those types.
+If `get$` is for `GET`, `post$` is for `POST`. Instead of query parameters, the object it receives is converted into form data, so the object can accept not only a string or an array of strings, but also a [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob), a [`File`](https://developer.mozilla.org/en-US/docs/Web/API/File), or an array of either of those types.
 
-Only `action$` can accept form data and uses the `POST` method, which makes it great for creating server-side logic when building forms.
+Only `post$` can accept form data and uses the `POST` method, which makes it great for creating server-side logic when building forms.
 
 ```js
-import { action$ } from 'thaler';
+import { post$ } from 'thaler';
 
-const addMessage = action$(async ({ greeting, receiver }) => {
+const addMessage = post$(async ({ greeting, receiver }) => {
   await db.messages.insert({ greeting, receiver });
   return new Response(null, {
     status: 200,
@@ -118,12 +118,12 @@ await addMessage({
 });
 ```
 
-You can also pass some request configuration (same as `server$`) as the second parameter for the function, however `action$` cannot have `method` or `body`. The callback in `action$` can also receive the `Request` instance as the second parameter.
+You can also pass some request configuration (same as `server$`) as the second parameter for the function, however `post$` cannot have `method` or `body`. The callback in `post$` can also receive the `Request` instance as the second parameter.
 
 ```js
-import { action$ } from 'thaler';
+import { post$ } from 'thaler';
 
-const addMessage = action$((formData, request) => {
+const addMessage = post$((formData, request) => {
   // do stuff
 });
 
@@ -136,7 +136,7 @@ await addMessage(formData, {
 
 ### `fn$` and `pure$`
 
-Unlike `loader$` and `action$`, `fn$` and `pure$` uses a superior form of serialization, so that not only it supports valid JSON values, it supports [an extended range of JS values](https://github.com/lxsmnsyc/seroval#supports).
+Unlike `get$` and `post$`, `fn$` and `pure$` uses a superior form of serialization, so that not only it supports valid JSON values, it supports [an extended range of JS values](https://github.com/lxsmnsyc/seroval#supports).
 
 ```js
 import { fn$ } from 'thaler';

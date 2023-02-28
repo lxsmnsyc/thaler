@@ -42,12 +42,12 @@ const example = server$((request) => {
     expect(await compile('client', code)).toMatchSnapshot();
   });
 });
-describe('loader$', () => {
+describe('get$', () => {
   it('should transform', async () => {
     const code = `
-import { loader$ } from 'thaler';
+import { get$ } from 'thaler';
 
-const example = loader$(({ greeting, receiver}) => {
+const example = get$(({ greeting, receiver}) => {
   const message = greeting + ', ' + receiver + '!';
   return new Response(message, {
     headers: {
@@ -61,12 +61,12 @@ const example = loader$(({ greeting, receiver}) => {
     expect(await compile('client', code)).toMatchSnapshot();
   });
 });
-describe('action$', () => {
+describe('post$', () => {
   it('should transform', async () => {
     const code = `
-import { action$ } from 'thaler';
+import { post$ } from 'thaler';
 
-const example = action$(({ greeting, receiver }) => {
+const example = post$(({ greeting, receiver }) => {
   const message = greeting + ', ' + receiver + '!';
   return new Response(message, {
     headers: {

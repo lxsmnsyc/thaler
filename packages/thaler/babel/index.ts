@@ -21,9 +21,9 @@ interface TrackedImport {
 
 const TRACKED_IMPORTS: Record<string, TrackedImport> = {
   server$: { type: 'server', scoping: false },
-  action$: { type: 'action', scoping: false },
-  loader$: { type: 'loader', scoping: false },
-  fn$: { type: 'function', scoping: true },
+  post$: { type: 'post', scoping: false },
+  get$: { type: 'get', scoping: false },
+  fn$: { type: 'fn', scoping: true },
   pure$: { type: 'pure', scoping: false },
 };
 

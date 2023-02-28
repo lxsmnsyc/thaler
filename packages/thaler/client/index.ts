@@ -1,13 +1,13 @@
 import seroval, { ServerValue } from 'seroval';
 import ThalerError from '../shared/error';
 import {
-  ThalerActionInit,
-  ThalerActionParam,
+  ThalerPostInit,
+  ThalerPostParam,
   ThalerFunctionInit,
   ThalerFunctions,
   ThalerFunctionTypes,
-  ThalerLoaderInit,
-  ThalerLoaderParam,
+  ThalerGetInit,
+  ThalerGetParam,
 } from '../shared/types';
 import {
   patchHeaders,
@@ -17,15 +17,15 @@ import {
 } from '../shared/utils';
 
 type ServerHandlerRegistration = [type: 'server', id: string];
-type LoaderHandlerRegistration = [type: 'loader', id: string];
-type ActionHandlerRegistration = [type: 'action', id: string];
-type FunctionHandlerRegistration = [type: 'function', id: string];
+type GetHandlerRegistration = [type: 'get', id: string];
+type PostHandlerRegistration = [type: 'post', id: string];
+type FunctionHandlerRegistration = [type: 'fn', id: string];
 type PureHandlerRegistration = [type: 'pure', id: string];
 
 type HandlerRegistration =
   | ServerHandlerRegistration
-  | LoaderHandlerRegistration
-  | ActionHandlerRegistration
+  | GetHandlerRegistration
+  | PostHandlerRegistration
   | FunctionHandlerRegistration
   | PureHandlerRegistration;
 
@@ -46,36 +46,36 @@ async function serverHandler(type: ThalerFunctionTypes, id: string, init: Reques
   return result;
 }
 
-async function actionHandler<P extends ThalerActionParam>(
+async function postHandler<P extends ThalerPostParam>(
   id: string,
   form: P,
-  init: ThalerActionInit = {},
+  init: ThalerPostInit = {},
 ) {
-  return serverHandler('action', id, {
+  return serverHandler('post', id, {
     ...init,
     method: 'POST',
     body: toFormData(form),
   });
 }
 
-async function loaderHandler<P extends ThalerLoaderParam>(
+async function getHandler<P extends ThalerGetParam>(
   id: string,
   search: P,
-  init: ThalerLoaderInit = {},
+  init: ThalerGetInit = {},
 ) {
-  return serverHandler('loader', `${id}?${toURLSearchParams(search).toString()}`, {
+  return serverHandler('get', `${id}?${toURLSearchParams(search).toString()}`, {
     ...init,
     method: 'GET',
   });
 }
 
-async function functionHandler<T extends ServerValue, R extends ServerValue>(
+async function fnHandler<T extends ServerValue, R extends ServerValue>(
   id: string,
   scope: ServerValue[],
   value: T,
   init: ThalerFunctionInit = {},
 ): Promise<R> {
-  const response = await serverHandler('function', id, {
+  const response = await serverHandler('fn', id, {
     ...init,
     method: 'POST',
     body: serializeFunctionBody({ scope, value }),
@@ -93,7 +93,7 @@ async function pureHandler<T extends ServerValue, R extends ServerValue>(
   value: T,
   init: ThalerFunctionInit = {},
 ): Promise<R> {
-  const response = await serverHandler('function', id, {
+  const response = await serverHandler('pure', id, {
     ...init,
     method: 'POST',
     body: seroval(value),
@@ -116,18 +116,18 @@ export function $$clone(
         type,
         id,
       });
-    case 'action':
-      return Object.assign(actionHandler.bind(null, id), {
+    case 'post':
+      return Object.assign(postHandler.bind(null, id), {
         type,
         id,
       });
-    case 'loader':
-      return Object.assign(loaderHandler.bind(null, id), {
+    case 'get':
+      return Object.assign(getHandler.bind(null, id), {
         type,
         id,
       });
-    case 'function':
-      return Object.assign(functionHandler.bind(null, id, scope), {
+    case 'fn':
+      return Object.assign(fnHandler.bind(null, id, scope), {
         type,
         id,
       });
