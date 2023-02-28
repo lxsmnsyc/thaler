@@ -8,6 +8,7 @@ import {
   ThalerFunctionTypes,
   ThalerGetInit,
   ThalerGetParam,
+  MaybePromise,
 } from '../shared/types';
 import {
   patchHeaders,
@@ -40,9 +41,22 @@ export function $$register(
   return { type, id };
 }
 
+export type Interceptor = (request: Request) => MaybePromise<Request>;
+
+const INTERCEPTORS: Interceptor[] = [];
+
+export function interceptRequest(callback: Interceptor) {
+  INTERCEPTORS.push(callback);
+}
+
 async function serverHandler(type: ThalerFunctionTypes, id: string, init: RequestInit) {
   patchHeaders(init, type);
-  const result = await fetch(id, init);
+  let root = new Request(id, init);
+  for (const intercept of INTERCEPTORS) {
+    // eslint-disable-next-line no-await-in-loop
+    root = await intercept(root);
+  }
+  const result = await fetch(root);
   return result;
 }
 
