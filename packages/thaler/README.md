@@ -134,9 +134,9 @@ await addMessage(formData, {
 });
 ```
 
-### `fn$`
+### `fn$` and `pure$`
 
-Unlike `get$` and `post$`, `fn$` uses a superior form of serialization, so that not only it supports valid JSON values, it supports [an extended range of JS values](https://github.com/lxsmnsyc/seroval#supports).
+Unlike `get$` and `post$`, `fn$` and `pure$` uses a superior form of serialization, so that not only it supports valid JSON values, it supports [an extended range of JS values](https://github.com/lxsmnsyc/seroval#supports).
 
 ```js
 import { fn$ } from 'thaler';
@@ -170,7 +170,7 @@ await addMessage(data, {
 
 #### Scoping
 
-Other functions can capture server-side scope but unlike the other functions, `fn$` has a special behavior: it can capture the client-side scope of where the function is declared on the client.
+Other functions can capture server-side scope but unlike the other functions (including `pure$`), `fn$` has a special behavior: it can capture the client-side scope of where the function is declared on the client.
 
 ```js
 import { fn$ } from 'thaler';
@@ -207,6 +207,49 @@ fn$(async () => {
 
 > **Warning**
 > Be careful on capturing scopes, as the captured variables must only be the values that can be serialized by `fn$`. If you're using a value that can't be serialized inside the callback that is declared outside, it cannot be captured by `fn$` and will lead to runtime errors.
+
+## Server Handler
+
+To manage the server functions, `thaler/server` provides a function call `handleRequest`. This manages all the incoming client requests, which includes matching and running their respective server-side functions.
+
+```js
+import { handleRequest } from 'thaler/server';
+
+const request = await handleRequest(request);
+if (request) {
+  // Request was matched
+  return request;
+}
+// Do other stuff
+```
+
+Your server runtime must have the following Web API:
+
+- [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request)
+- [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
+- [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData)
+- [`File`](https://developer.mozilla.org/en-US/docs/Web/API/File)
+- [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob)
+- [`Headers`](https://developer.mozilla.org/en-US/docs/Web/API/Headers)
+  
+If you're using bare Node runtime, you can use [`node-fetch`](https://www.npmjs.com/package/node-fetch)
+
+## Intercepting Client Requests
+
+`thaler/client` provides `interceptRequest` to intercept/transform outgoing requests made by the functions. This is useful for adding request fields like headers.
+
+```js
+import { interceptRequest } from 'thaler/client';
+
+interceptRequest((request) => {
+  return new Request(request, {
+    headers: {
+      'Authorization': 'Bearer <token>',
+    },
+  });
+});
+
+```
 
 ## Integrations
 
