@@ -147,8 +147,8 @@ const addUsers = function$(async (users) => {
 });
 
 await addUsers([
-  { name: 'John Doe', email: 'john.doe@johndoe.com },
-  { name: 'Jane Doe', email: 'jane.doe@janedoe.com },
+  { name: 'John Doe', email: 'john.doe@johndoe.com' },
+  { name: 'Jane Doe', email: 'jane.doe@janedoe.com' },
 ]);
 ```
 
