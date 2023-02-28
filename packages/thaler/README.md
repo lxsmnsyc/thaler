@@ -170,7 +170,7 @@ await addMessage(data, {
 
 #### Scoping
 
-Unlike the other functions, `function$` has a special behavior: it can capture the client-side scope of where the function is declared on the client.
+Other functions can capture server-side scope but unlike the other functions, `function$` has a special behavior: it can capture the client-side scope of where the function is declared on the client.
 
 ```js
 import { function$ } from 'thaler';
@@ -188,8 +188,7 @@ console.log(await getMessage({ greeting: 'Hello', receiver: 'World' })); // Mess
 > **Note**
 > `function$` can only capture local scope, and not global scope.
 
-> **Warning**
-> Be careful on capturing scopes, as the captured variables must only be the values that can be serialized by `function$`. If you're using a function inside the callback that is declared outside, it cannot be captured by `function$` and will lead to runtime errors. It's recommended to use dynamic imports inside the callback instead.
+If you're using an imported value inside the callback, it's better to import it inside the callback in the form of dynamic `import`.
 
 ```js
 // Don't do this
@@ -205,6 +204,9 @@ function$(async () => {
   example();
 });
 ```
+
+> **Warning**
+> Be careful on capturing scopes, as the captured variables must only be the values that can be serialized by `function$`. If you're using a value that can't be serialized inside the callback that is declared outside, it cannot be captured by `function$` and will lead to runtime errors.
 
 ## Integrations
 
