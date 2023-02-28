@@ -217,7 +217,6 @@ export async function handleRequest(request: Request): Promise<Response | undefi
           throw new Error('unexpected type');
       }
     } catch (error) {
-      console.log(error);
       return new Response(`function "${id}" threw an unhandled server-side error.`, {
         status: 500,
       });
