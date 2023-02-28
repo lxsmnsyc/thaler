@@ -134,9 +134,9 @@ await addMessage(formData, {
 });
 ```
 
-### `fn$`
+### `fn$` and `pure$`
 
-Unlike `loader$` and `action$`, `fn$` uses a superior form of serialization, so that not only it supports valid JSON values, it supports [an extended range of JS values](https://github.com/lxsmnsyc/seroval#supports).
+Unlike `loader$` and `action$`, `fn$` and `pure$` uses a superior form of serialization, so that not only it supports valid JSON values, it supports [an extended range of JS values](https://github.com/lxsmnsyc/seroval#supports).
 
 ```js
 import { fn$ } from 'thaler';
@@ -170,7 +170,7 @@ await addMessage(data, {
 
 #### Scoping
 
-Other functions can capture server-side scope but unlike the other functions, `fn$` has a special behavior: it can capture the client-side scope of where the function is declared on the client.
+Other functions can capture server-side scope but unlike the other functions (including `pure$`), `fn$` has a special behavior: it can capture the client-side scope of where the function is declared on the client.
 
 ```js
 import { fn$ } from 'thaler';

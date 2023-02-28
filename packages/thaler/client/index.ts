@@ -1,4 +1,4 @@
-import { ServerValue } from 'seroval';
+import seroval, { ServerValue } from 'seroval';
 import ThalerError from '../shared/error';
 import {
   ThalerActionInit,
@@ -20,12 +20,14 @@ type ServerHandlerRegistration = [type: 'server', id: string];
 type LoaderHandlerRegistration = [type: 'loader', id: string];
 type ActionHandlerRegistration = [type: 'action', id: string];
 type FunctionHandlerRegistration = [type: 'function', id: string];
+type PureHandlerRegistration = [type: 'pure', id: string];
 
 type HandlerRegistration =
   | ServerHandlerRegistration
   | LoaderHandlerRegistration
   | ActionHandlerRegistration
-  | FunctionHandlerRegistration;
+  | FunctionHandlerRegistration
+  | PureHandlerRegistration;
 
 interface HandlerRegistrationResult {
   type: ThalerFunctionTypes;
@@ -86,6 +88,24 @@ async function functionHandler<T extends ServerValue, R extends ServerValue>(
   throw new ThalerError(id);
 }
 
+async function pureHandler<T extends ServerValue, R extends ServerValue>(
+  id: string,
+  value: T,
+  init: ThalerFunctionInit = {},
+): Promise<R> {
+  const response = await serverHandler('function', id, {
+    ...init,
+    method: 'POST',
+    body: seroval(value),
+  });
+  if (response.ok) {
+    const serialized = await response.text();
+    // eslint-disable-next-line no-eval
+    return (0, eval)(serialized) as R;
+  }
+  throw new ThalerError(id);
+}
+
 export function $$clone(
   { type, id }: HandlerRegistrationResult,
   scope: ServerValue[],
@@ -108,6 +128,11 @@ export function $$clone(
       });
     case 'function':
       return Object.assign(functionHandler.bind(null, id, scope), {
+        type,
+        id,
+      });
+    case 'pure':
+      return Object.assign(pureHandler.bind(null, id), {
         type,
         id,
       });

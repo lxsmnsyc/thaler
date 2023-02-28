@@ -13,12 +13,15 @@ export type ThalerLoaderHandler<P extends ThalerLoaderParam> =
   (search: P, ctx: Request) => MaybePromise<Response>;
 export type ThalerFunctionHandler<T extends ServerValue, R extends ServerValue> =
   (value: T, ctx: Request) => MaybePromise<R>;
+export type ThalerPureHandler<T extends ServerValue, R extends ServerValue> =
+  (value: T, ctx: Request) => MaybePromise<R>;
 
 export type ThalerGenericHandler =
   | ThalerServerHandler
   | ThalerActionHandler<any>
   | ThalerLoaderHandler<any>
-  | ThalerFunctionHandler<any, any>;
+  | ThalerFunctionHandler<any, any>
+  | ThalerPureHandler<any, any>;
 
 export interface ThalerBaseFunction {
   id: string;
@@ -53,10 +56,24 @@ export interface ThalerFunction<
   (value: T, init?: ThalerFunctionInit): Promise<R>;
 }
 
+export interface ThalerPureFunction<
+  T extends ServerValue,
+  R extends ServerValue,
+> extends ThalerBaseFunction {
+  type: 'pure';
+  (value: T, init?: ThalerFunctionInit): Promise<R>;
+}
+
 export type ThalerFunctions =
   | ThalerServerFunction
   | ThalerActionFunction<any>
   | ThalerLoaderFunction<any>
-  | ThalerFunction<any, any>;
+  | ThalerFunction<any, any>
+  | ThalerPureFunction<any, any>;
 
-export type ThalerFunctionTypes = 'server' | 'loader' | 'action' | 'function';
+export type ThalerFunctionTypes =
+  | 'server'
+  | 'loader'
+  | 'action'
+  | 'function'
+  | 'pure';

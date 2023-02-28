@@ -9,6 +9,8 @@ import {
   ThalerLoaderFunction,
   ThalerLoaderHandler,
   ThalerLoaderParam,
+  ThalerPureFunction,
+  ThalerPureHandler,
   ThalerServerFunction,
   ThalerServerHandler,
 } from '../shared/types';
@@ -33,4 +35,10 @@ export function fn$<T extends ServerValue, R extends ServerValue>(
   handler: ThalerFunctionHandler<T, R>,
 ): ThalerFunction<T, R> {
   throw new Error('fn$ cannot be called during runtime.');
+}
+
+export function pure$<T extends ServerValue, R extends ServerValue>(
+  handler: ThalerPureHandler<T, R>,
+): ThalerPureFunction<T, R> {
+  throw new Error('pure$ cannot be called during runtime.');
 }
