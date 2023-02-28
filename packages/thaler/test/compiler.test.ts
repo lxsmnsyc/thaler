@@ -47,8 +47,8 @@ describe('loader$', () => {
     const code = `
 import { loader$ } from 'thaler';
 
-const example = loader$((search) => {
-  const message = search.get('greeting') + ', ' + search.get('receiver') + '!';
+const example = loader$(({ greeting, receiver}) => {
+  const message = greeting + ', ' + receiver + '!';
   return new Response(message, {
     headers: {
       'content-type': 'text/html',
@@ -66,8 +66,8 @@ describe('action$', () => {
     const code = `
 import { action$ } from 'thaler';
 
-const example = action$((form) => {
-  const message = form.get('greeting') + ', ' + form.get('receiver') + '!';
+const example = action$(({ greeting, receiver }) => {
+  const message = greeting + ', ' + receiver + '!';
   return new Response(message, {
     headers: {
       'content-type': 'text/html',
