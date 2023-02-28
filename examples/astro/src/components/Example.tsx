@@ -1,17 +1,36 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import { fn$ } from 'thaler';
+import { createResource, createSignal, Suspense } from 'solid-js';
+import { pure$ } from 'thaler';
+
+const prefix = 'Server Count';
 
 export default function Example(props: { message: string }) {
-  const logger = fn$((message: string) => {
-    const processed = `Message: ${message}`;
-    console.log(processed);
-    return processed;
+  const [state, setState] = createSignal(0);
+
+  const serverCount = pure$(async (value: number) => {
+    const sleep = (ms: number) => new Promise((res) => {
+      setTimeout(res, ms, true);
+    });
+    await sleep(1000);
+    return `${prefix}: ${value}`;
   });
+
+  const [data] = createResource(state, (value) => serverCount(value));
+
+  function increment() {
+    setState((c) => c + 1);
+  }
+
   return (
-    <button onClick={async () => {
-      console.log('Received', await logger(props.message));
-    }}>
-      Click me!
-    </button>
+    <>
+      <button onClick={increment}>
+        {`Client Count: ${state()}`}
+      </button>
+      <div>
+        <Suspense fallback={<h1>Loading</h1>}>
+          <h1>{data()}</h1>
+        </Suspense>
+      </div>
+    </>
   );
 }
