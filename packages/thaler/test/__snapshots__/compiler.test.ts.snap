@@ -80,6 +80,28 @@ const _loader = _$$register(\\"loader\\", \\"http://localhost:3000/example/a4dc1
 const example = _$$clone(_loader);"
 `;
 
+exports[`pure$ > should transform 1`] = `
+"import { $$clone as _$$clone } from \\"thaler/server\\";
+import { $$register as _$$register } from \\"thaler/server\\";
+import { pure$ } from 'thaler';
+const _pure = _$$register(\\"pure\\", \\"http://localhost:3000/example/a4dc1948-0\\", ({
+  greeting,
+  receiver
+}) => {
+  const message = greeting + ', ' + receiver + '!';
+  return message;
+});
+const example = _$$clone(_pure);"
+`;
+
+exports[`pure$ > should transform 2`] = `
+"import { $$clone as _$$clone } from \\"thaler/client\\";
+import { $$register as _$$register } from \\"thaler/client\\";
+import { pure$ } from 'thaler';
+const _pure = _$$register(\\"pure\\", \\"http://localhost:3000/example/a4dc1948-0\\");
+const example = _$$clone(_pure);"
+`;
+
 exports[`server$ > should transform 1`] = `
 "import { $$clone as _$$clone } from \\"thaler/server\\";
 import { $$register as _$$register } from \\"thaler/server\\";

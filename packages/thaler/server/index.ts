@@ -203,8 +203,8 @@ export async function handleRequest(request: Request): Promise<Response | undefi
         }
         case 'pure': {
           // eslint-disable-next-line no-eval
-          const value = (0, eval)(await request.text()) as FunctionBody;
-          const result = callback(value, request);
+          const value = (0, eval)(await request.text());
+          const result = await callback(value, request);
           const serialized = seroval(result);
           return new Response(serialized, {
             headers: {
@@ -217,6 +217,7 @@ export async function handleRequest(request: Request): Promise<Response | undefi
           throw new Error('unexpected type');
       }
     } catch (error) {
+      console.log(error);
       return new Response(`function "${id}" threw an unhandled server-side error.`, {
         status: 500,
       });

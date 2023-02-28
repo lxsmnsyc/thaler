@@ -96,3 +96,23 @@ const example = fn$(({ greeting, receiver }) => {
     expect(await compile('client', code)).toMatchSnapshot();
   });
 });
+
+describe('pure$', () => {
+  it('should transform', async () => {
+    const code = `
+import { pure$ } from 'thaler';
+
+const sleep = (ms) => new Promise((res) => {
+  setTimeout(res, ms, true);
+});
+
+const example = pure$(async ({ greeting, receiver }) => {
+  await sleep(1000);
+  const message = greeting + ', ' + receiver + '!';
+  return message;
+});
+  `;
+    expect(await compile('server', code)).toMatchSnapshot();
+    expect(await compile('client', code)).toMatchSnapshot();
+  });
+});
