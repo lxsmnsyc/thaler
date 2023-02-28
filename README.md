@@ -134,14 +134,14 @@ await addMessage(formData, {
 });
 ```
 
-### `function$`
+### `fn$`
 
-Unlike `loader$` and `action$`, `function$` uses a superior form of serialization, so that not only it supports valid JSON values, it supports [an extended range of JS values](https://github.com/lxsmnsyc/seroval#supports).
+Unlike `loader$` and `action$`, `fn$` uses a superior form of serialization, so that not only it supports valid JSON values, it supports [an extended range of JS values](https://github.com/lxsmnsyc/seroval#supports).
 
 ```js
-import { function$ } from 'thaler';
+import { fn$ } from 'thaler';
 
-const addUsers = function$(async (users) => {
+const addUsers = fn$(async (users) => {
   const db = await import('./db');
   return Promise.all(users.map((user) => db.users.insert(user)));
 });
@@ -152,12 +152,12 @@ await addUsers([
 ]);
 ```
 
-You can also pass some request configuration (same as `server$`) as the second parameter for the function, however `function$` cannot have `method` or `body`. The callback in `function$` can also receive the `Request` instance as the second parameter.
+You can also pass some request configuration (same as `server$`) as the second parameter for the function, however `fn$` cannot have `method` or `body`. The callback in `fn$` can also receive the `Request` instance as the second parameter.
 
 ```js
-import { function$ } from 'thaler';
+import { fn$ } from 'thaler';
 
-const addMessage = function$((data, request) => {
+const addMessage = fn$((data, request) => {
   // do stuff
 });
 
@@ -170,14 +170,14 @@ await addMessage(data, {
 
 #### Scoping
 
-Other functions can capture server-side scope but unlike the other functions, `function$` has a special behavior: it can capture the client-side scope of where the function is declared on the client.
+Other functions can capture server-side scope but unlike the other functions, `fn$` has a special behavior: it can capture the client-side scope of where the function is declared on the client.
 
 ```js
-import { function$ } from 'thaler';
+import { fn$ } from 'thaler';
 
 const prefix = 'Message:';
 
-const getMessage = function$(({ greeting, receiver }) => {
+const getMessage = fn$(({ greeting, receiver }) => {
   // `prefix` is captured and sent to the server
   return `${prefix} "${greeting}, ${receiver}!"`;
 });
@@ -186,7 +186,7 @@ console.log(await getMessage({ greeting: 'Hello', receiver: 'World' })); // Mess
 ```
 
 > **Note**
-> `function$` can only capture local scope, and not global scope.
+> `fn$` can only capture local scope, and not global scope.
 
 If you're using an imported value inside the callback, it's better to import it inside the callback in the form of dynamic `import`.
 
@@ -194,19 +194,19 @@ If you're using an imported value inside the callback, it's better to import it 
 // Don't do this
 import { example } from './example';
 
-function$(() => {
+fn$(() => {
   example();
 });
 
 // Do this
-function$(async () => {
+fn$(async () => {
   const { example } = await import('./example');
   example();
 });
 ```
 
 > **Warning**
-> Be careful on capturing scopes, as the captured variables must only be the values that can be serialized by `function$`. If you're using a value that can't be serialized inside the callback that is declared outside, it cannot be captured by `function$` and will lead to runtime errors.
+> Be careful on capturing scopes, as the captured variables must only be the values that can be serialized by `fn$`. If you're using a value that can't be serialized inside the callback that is declared outside, it cannot be captured by `fn$` and will lead to runtime errors.
 
 ## Integrations
 
