@@ -152,6 +152,24 @@ await addUsers([
 ]);
 ```
 
+You can also pass some request configuration (same as `server$`) as the second parameter for the function, however `function$` cannot have `method` or `body`. The callback in `function$` can also receive the `Request` instance as the second parameter.
+
+```js
+import { function$ } from 'thaler';
+
+const addMessage = function$((data, request) => {
+  // do stuff
+});
+
+await addMessage(data, {
+  headers: {
+    // do some header stuff
+  },
+});
+```
+
+#### Scoping
+
 Unlike the other functions, `function$` has a special behavior: it can capture the client-side scope of where the function is declared on the client.
 
 ```js
@@ -167,10 +185,10 @@ const getMessage = function$(({ greeting, receiver }) => {
 console.log(await getMessage({ greeting: 'Hello', receiver: 'World' })); // Message: "Hello, World!"
 ```
 
-> **NOTE**
+> **Note**
 > `function$` can only capture local scope, and not global scope.
 
-> **WARNING**
+> **Warning**
 > Be careful on capturing scopes, as the captured variables must only be the values that can be serialized by `function$`. If you're using a function inside the callback that is declared outside, it cannot be captured by `function$` and will lead to runtime errors. It's recommended to use dynamic imports inside the callback instead.
 
 ```js
