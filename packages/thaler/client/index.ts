@@ -5,6 +5,7 @@ import {
   ThalerActionParam,
   ThalerFunctionInit,
   ThalerFunctions,
+  ThalerFunctionTypes,
   ThalerLoaderInit,
   ThalerLoaderParam,
 } from '../shared/types';
@@ -27,7 +28,7 @@ type HandlerRegistration =
   | FunctionHandlerRegistration;
 
 interface HandlerRegistrationResult {
-  type: HandlerRegistration[0];
+  type: ThalerFunctionTypes;
   id: string;
 }
 
@@ -37,7 +38,7 @@ export function $$register(
   return { type, id };
 }
 
-async function serverHandler(type: HandlerRegistration[0], id: string, init: RequestInit) {
+async function serverHandler(type: ThalerFunctionTypes, id: string, init: RequestInit) {
   patchHeaders(init, type);
   const result = await fetch(id, init);
   return result;
