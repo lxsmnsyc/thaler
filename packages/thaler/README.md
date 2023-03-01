@@ -263,6 +263,10 @@ interceptRequest((request) => {
 - [SolidStart](https://start.solidjs.com/getting-started/what-is-solidstart)
   - [`server$`](https://start.solidjs.com/api/server)
 
+## Sponsors
+
+![Sponsors](https://github.com/lxsmnsyc/sponsors/blob/main/sponsors.svg?raw=true)
+
 ## License
 
 MIT © [lxsmnsyc](https://github.com/lxsmnsyc)
