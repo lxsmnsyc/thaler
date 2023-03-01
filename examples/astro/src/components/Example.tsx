@@ -1,17 +1,18 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import { createResource, createSignal, Suspense } from 'solid-js';
-import { pure$ } from 'thaler';
+import { fn$ } from 'thaler';
 
 const prefix = 'Server Count';
 
 export default function Example(props: { message: string }) {
   const [state, setState] = createSignal(0);
 
-  const serverCount = pure$(async (value: number) => {
+  const serverCount = fn$(async (value: number) => {
     const sleep = (ms: number) => new Promise((res) => {
       setTimeout(res, ms, true);
     });
     await sleep(1000);
+    console.log('Received', value);
     return `${prefix}: ${value}`;
   });
 
