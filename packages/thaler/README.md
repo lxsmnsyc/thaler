@@ -255,6 +255,14 @@ interceptRequest((request) => {
 
 - [Vite](https://github.com/lxsmnsyc/thaler/tree/main/packages/vite)
 
+## Inspirations
+
+- [Qwik](https://qwik.builder.io/)
+  - [`loader$`](https://qwik.builder.io/qwikcity/loader/)
+  - [`action$`](https://qwik.builder.io/qwikcity/action/)
+- [SolidStart](https://start.solidjs.com/getting-started/what-is-solidstart)
+  - [`server$`](https://start.solidjs.com/api/server)
+
 ## License
 
 MIT © [lxsmnsyc](https://github.com/lxsmnsyc)
