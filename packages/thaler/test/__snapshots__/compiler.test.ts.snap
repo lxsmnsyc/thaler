@@ -14,7 +14,7 @@ const _fn = _$$register(\\"fn\\", \\"http://localhost:3000/example/a4dc1948-0\\"
   const message = PREFIX + greeting + ', ' + receiver + '!';
   return message;
 });
-const example = _$$clone(_fn, [PREFIX]);"
+const example = _$$clone(_fn, () => [PREFIX]);"
 `;
 
 exports[`fn$ > should transform 2`] = `
@@ -23,7 +23,7 @@ import { $$register as _$$register } from \\"thaler/client\\";
 import { fn$ } from 'thaler';
 const PREFIX = 'Message: ';
 const _fn = _$$register(\\"fn\\", \\"http://localhost:3000/example/a4dc1948-0\\");
-const example = _$$clone(_fn, [PREFIX]);"
+const example = _$$clone(_fn, () => [PREFIX]);"
 `;
 
 exports[`get$ > should transform 1`] = `

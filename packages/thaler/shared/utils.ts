@@ -1,5 +1,10 @@
-import seroval, { ServerValue } from 'seroval';
-import { ThalerPostParam, ThalerFunctionTypes, ThalerGetParam } from './types';
+import { serializeAsync } from 'seroval';
+import {
+  ThalerValue,
+  ThalerPostParam,
+  ThalerFunctionTypes,
+  ThalerGetParam,
+} from './types';
 
 export const XThalerRequestType = 'X-Thaler-Request-Type';
 
@@ -16,12 +21,17 @@ export function patchHeaders(init: RequestInit, type: ThalerFunctionTypes) {
 }
 
 export interface FunctionBody {
-  scope: ServerValue[];
-  value: ServerValue;
+  scope: () => ThalerValue[];
+  value: ThalerValue;
+}
+
+export interface DeserializedFunctionBody extends Record<string, ThalerValue> {
+  scope: ThalerValue[];
+  value: ThalerValue;
 }
 
 export function serializeFunctionBody({ scope, value }: FunctionBody) {
-  return seroval({ scope, value });
+  return serializeAsync({ scope: scope(), value });
 }
 
 export function fromFormData<T extends ThalerPostParam>(formData: FormData): T {

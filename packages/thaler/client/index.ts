@@ -1,6 +1,7 @@
-import seroval, { ServerValue } from 'seroval';
+import { deserialize, serializeAsync } from 'seroval';
 import ThalerError from '../shared/error';
 import {
+  ThalerValue,
   ThalerPostInit,
   ThalerPostParam,
   ThalerFunctionInit,
@@ -83,26 +84,25 @@ async function getHandler<P extends ThalerGetParam>(
   });
 }
 
-async function fnHandler<T extends ServerValue, R extends ServerValue>(
+async function fnHandler<T extends ThalerValue, R extends ThalerValue>(
   id: string,
-  scope: ServerValue[],
+  scope: () => ThalerValue[],
   value: T,
   init: ThalerFunctionInit = {},
 ): Promise<R> {
   const response = await serverHandler('fn', id, {
     ...init,
     method: 'POST',
-    body: serializeFunctionBody({ scope, value }),
+    body: await serializeFunctionBody({ scope, value }),
   });
   if (response.ok) {
     const serialized = await response.text();
-    // eslint-disable-next-line no-eval
-    return (0, eval)(serialized) as R;
+    return deserialize<R>(serialized);
   }
   throw new ThalerError(id);
 }
 
-async function pureHandler<T extends ServerValue, R extends ServerValue>(
+async function pureHandler<T extends ThalerValue, R extends ThalerValue>(
   id: string,
   value: T,
   init: ThalerFunctionInit = {},
@@ -110,19 +110,18 @@ async function pureHandler<T extends ServerValue, R extends ServerValue>(
   const response = await serverHandler('pure', id, {
     ...init,
     method: 'POST',
-    body: seroval(value),
+    body: await serializeAsync(value),
   });
   if (response.ok) {
     const serialized = await response.text();
-    // eslint-disable-next-line no-eval
-    return (0, eval)(serialized) as R;
+    return deserialize<R>(serialized);
   }
   throw new ThalerError(id);
 }
 
 export function $$clone(
   { type, id }: HandlerRegistrationResult,
-  scope: ServerValue[],
+  scope: () => ThalerValue[],
 ): ThalerFunctions {
   switch (type) {
     case 'server':

@@ -1,5 +1,6 @@
-import seroval, { ServerValue } from 'seroval';
+import { deserialize, serializeAsync } from 'seroval';
 import {
+  ThalerValue,
   ThalerPostHandler,
   ThalerPostParam,
   ThalerFnHandler,
@@ -10,9 +11,9 @@ import {
   ThalerServerHandler,
 } from '../shared/types';
 import {
+  DeserializedFunctionBody,
   fromFormData,
   fromURLSearchParams,
-  FunctionBody,
   patchHeaders,
   serializeFunctionBody,
   toFormData,
@@ -24,9 +25,9 @@ type GetHandlerRegistration<P extends ThalerGetParam> =
   [type: 'get', id: string, callback: ThalerGetHandler<P>];
 type PostHandlerRegistration<P extends ThalerPostParam> =
   [type: 'post', id: string, callback: ThalerPostHandler<P>];
-type FunctionHandlerRegistration<T extends ServerValue, R extends ServerValue> =
+type FunctionHandlerRegistration<T extends ThalerValue, R extends ThalerValue> =
   [type: 'fn', id: string, callback: ThalerFnHandler<T, R>];
-type PureHandlerRegistration<T extends ServerValue, R extends ServerValue> =
+type PureHandlerRegistration<T extends ThalerValue, R extends ThalerValue> =
   [type: 'pure', id: string, callback: ThalerPureHandler<T, R>];
 
 type HandlerRegistration =
@@ -85,11 +86,11 @@ async function getHandler<P extends ThalerGetParam>(
   return callback(search, request);
 }
 
-let SCOPE: ServerValue[] | undefined;
+let SCOPE: ThalerValue[] | undefined;
 
-function runWithScope<T>(scope: ServerValue[], callback: () => T): T {
+function runWithScope<T>(scope: () => ThalerValue[], callback: () => T): T {
   const parent = SCOPE;
-  SCOPE = scope;
+  SCOPE = scope();
   try {
     return callback();
   } finally {
@@ -97,25 +98,25 @@ function runWithScope<T>(scope: ServerValue[], callback: () => T): T {
   }
 }
 
-async function fnHandler<T extends ServerValue, R extends ServerValue>(
+async function fnHandler<T extends ThalerValue, R extends ThalerValue>(
   id: string,
   callback: ThalerFnHandler<T, R>,
-  scope: ServerValue[],
+  scope: () => ThalerValue[],
   value: T,
   init: RequestInit = {},
 ) {
   patchHeaders(init, 'fn');
-  return runWithScope(scope, () => {
+  return runWithScope(scope, async () => {
     const request = new Request(id, {
       ...init,
       method: 'POST',
-      body: serializeFunctionBody({ scope, value }),
+      body: await serializeFunctionBody({ scope, value }),
     });
     return callback(value, request);
   });
 }
 
-async function pureHandler<T extends ServerValue, R extends ServerValue>(
+async function pureHandler<T extends ThalerValue, R extends ThalerValue>(
   id: string,
   callback: ThalerPureHandler<T, R>,
   value: T,
@@ -125,18 +126,18 @@ async function pureHandler<T extends ServerValue, R extends ServerValue>(
   const request = new Request(id, {
     ...init,
     method: 'POST',
-    body: seroval(value),
+    body: await serializeAsync(value),
   });
   return callback(value, request);
 }
 
-export function $$scope(): ServerValue[] {
+export function $$scope(): ThalerValue[] {
   return SCOPE!;
 }
 
 export function $$clone(
   [type, id, callback]: HandlerRegistration,
-  scope: ServerValue[],
+  scope: () => ThalerValue[],
 ): ThalerFunctions {
   switch (type) {
     case 'server':
@@ -160,7 +161,7 @@ export function $$clone(
         id,
       });
     case 'pure':
-      return Object.assign(pureHandler.bind(null, id, callback, scope), {
+      return Object.assign(pureHandler.bind(null, id, callback), {
         type,
         id,
       });
@@ -190,10 +191,9 @@ export async function handleRequest(request: Request): Promise<Response | undefi
             request,
           );
         case 'fn': {
-          // eslint-disable-next-line no-eval
-          const { scope, value } = (0, eval)(await request.text()) as FunctionBody;
-          const result = await runWithScope(scope, () => callback(value, request));
-          const serialized = seroval(result);
+          const { scope, value } = deserialize<DeserializedFunctionBody>(await request.text());
+          const result = await runWithScope(() => scope, () => callback(value, request));
+          const serialized = await serializeAsync(result);
           return new Response(serialized, {
             headers: {
               'Content-Type': 'text/plain',
@@ -202,10 +202,9 @@ export async function handleRequest(request: Request): Promise<Response | undefi
           });
         }
         case 'pure': {
-          // eslint-disable-next-line no-eval
-          const value = (0, eval)(await request.text());
+          const value = deserialize(await request.text());
           const result = await callback(value, request);
-          const serialized = seroval(result);
+          const serialized = await serializeAsync(result);
           return new Response(serialized, {
             headers: {
               'Content-Type': 'text/plain',

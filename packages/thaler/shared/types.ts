@@ -1,5 +1,6 @@
-import { ServerValue } from 'seroval';
+import { AsyncServerValue } from 'seroval';
 
+export type ThalerValue = AsyncServerValue;
 export type MaybePromise<T> = T | Promise<T>;
 
 export type MaybeArray<T> = T | T[];
@@ -11,9 +12,9 @@ export type ThalerPostHandler<P extends ThalerPostParam> =
   (formData: P, ctx: Request) => MaybePromise<Response>;
 export type ThalerGetHandler<P extends ThalerGetParam> =
   (search: P, ctx: Request) => MaybePromise<Response>;
-export type ThalerFnHandler<T extends ServerValue, R extends ServerValue> =
+export type ThalerFnHandler<T extends ThalerValue, R extends ThalerValue> =
   (value: T, ctx: Request) => MaybePromise<R>;
-export type ThalerPureHandler<T extends ServerValue, R extends ServerValue> =
+export type ThalerPureHandler<T extends ThalerValue, R extends ThalerValue> =
   (value: T, ctx: Request) => MaybePromise<R>;
 
 export type ThalerGenericHandler =
@@ -49,16 +50,16 @@ export interface ThalerGetFunction<P extends ThalerGetParam> extends ThalerBaseF
 export type ThalerFunctionInit = Omit<RequestInit, 'method' | 'body'>;
 
 export interface ThalerFunction<
-  T extends ServerValue,
-  R extends ServerValue,
+  T extends ThalerValue,
+  R extends ThalerValue,
 > extends ThalerBaseFunction {
   type: 'fn';
   (value: T, init?: ThalerFunctionInit): Promise<R>;
 }
 
 export interface ThalerPureFunction<
-  T extends ServerValue,
-  R extends ServerValue,
+  T extends ThalerValue,
+  R extends ThalerValue,
 > extends ThalerBaseFunction {
   type: 'pure';
   (value: T, init?: ThalerFunctionInit): Promise<R>;

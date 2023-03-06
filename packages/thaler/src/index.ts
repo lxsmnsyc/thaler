@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { ServerValue } from 'seroval';
+import { AsyncServerValue } from 'seroval';
 import {
   ThalerPostFunction,
   ThalerPostHandler,
@@ -14,6 +14,8 @@ import {
   ThalerServerFunction,
   ThalerServerHandler,
 } from '../shared/types';
+
+export { ThalerValue } from '../shared/types';
 
 export function server$(handler: ThalerServerHandler): ThalerServerFunction {
   throw new Error('server$ cannot be called during runtime.');
@@ -31,13 +33,13 @@ export function get$<P extends ThalerGetParam>(
   throw new Error('get$ cannot be called during runtime.');
 }
 
-export function fn$<T extends ServerValue, R extends ServerValue>(
+export function fn$<T extends AsyncServerValue, R extends AsyncServerValue>(
   handler: ThalerFnHandler<T, R>,
 ): ThalerFunction<T, R> {
   throw new Error('fn$ cannot be called during runtime.');
 }
 
-export function pure$<T extends ServerValue, R extends ServerValue>(
+export function pure$<T extends AsyncServerValue, R extends AsyncServerValue>(
   handler: ThalerPureHandler<T, R>,
 ): ThalerPureFunction<T, R> {
   throw new Error('pure$ cannot be called during runtime.');

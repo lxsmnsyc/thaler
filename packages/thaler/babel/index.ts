@@ -140,7 +140,7 @@ function createThalerFunction(
     // Collect bindings for scoping
     if (registry.scoping) {
       const scope = getForeignBindings(argument);
-      cloneArgs.push(t.arrayExpression(scope));
+      cloneArgs.push(t.arrowFunctionExpression([], t.arrayExpression(scope)));
       // Add scoping to the arrow function
       if (ctx.opts.mode === 'server') {
         const statement = t.isStatement(argument.node.body)
