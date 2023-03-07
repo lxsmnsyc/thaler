@@ -15,7 +15,11 @@ import {
   ThalerServerHandler,
 } from '../shared/types';
 
-export { ThalerValue } from '../shared/types';
+export {
+  ThalerValue,
+  ThalerPostParam,
+  ThalerGetParam,
+} from '../shared/types';
 
 export function server$(handler: ThalerServerHandler): ThalerServerFunction {
   throw new Error('server$ cannot be called during runtime.');
