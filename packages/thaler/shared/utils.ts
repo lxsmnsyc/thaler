@@ -1,4 +1,4 @@
-import { serializeAsync } from 'seroval';
+import { toJSONAsync } from 'seroval';
 import {
   ThalerValue,
   ThalerPostParam,
@@ -30,8 +30,8 @@ export interface DeserializedFunctionBody extends Record<string, ThalerValue> {
   value: ThalerValue;
 }
 
-export function serializeFunctionBody({ scope, value }: FunctionBody) {
-  return serializeAsync({ scope: scope(), value });
+export async function serializeFunctionBody({ scope, value }: FunctionBody) {
+  return JSON.stringify(await toJSONAsync({ scope: scope(), value }));
 }
 
 export function fromFormData<T extends ThalerPostParam>(formData: FormData): T {

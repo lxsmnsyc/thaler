@@ -168,9 +168,9 @@ await addMessage(data, {
 });
 ```
 
-#### Scoping
+#### Closure Extraction
 
-Other functions can capture server-side scope but unlike the other functions (including `pure$`), `fn$` has a special behavior: it can capture the client-side scope of where the function is declared on the client.
+Other functions can capture server-side scope but unlike the other functions (including `pure$`), `fn$` has a special behavior: it can capture the client-side closure of where the function is declared on the client, serialize the captured closure and send it to the server.
 
 ```js
 import { fn$ } from 'thaler';
@@ -250,6 +250,16 @@ interceptRequest((request) => {
 });
 
 ```
+
+## Utilities
+
+### `json(data, responseInit)`
+
+A shortcut function to create a `Response` object with JSON body.
+
+### `text(data, responseInit)`
+
+A shortcut function to create a `Response` object with text body.
 
 ## Integrations
 

@@ -1,4 +1,4 @@
-import { deserialize, serializeAsync } from 'seroval';
+import { deserialize, toJSONAsync } from 'seroval';
 import ThalerError from '../shared/error';
 import {
   ThalerValue,
@@ -96,8 +96,7 @@ async function fnHandler<T extends ThalerValue, R extends ThalerValue>(
     body: await serializeFunctionBody({ scope, value }),
   });
   if (response.ok) {
-    const serialized = await response.text();
-    return deserialize<R>(serialized);
+    return deserialize<R>(await response.text());
   }
   throw new ThalerError(id);
 }
@@ -110,11 +109,10 @@ async function pureHandler<T extends ThalerValue, R extends ThalerValue>(
   const response = await serverHandler('pure', id, {
     ...init,
     method: 'POST',
-    body: await serializeAsync(value),
+    body: JSON.stringify(await toJSONAsync(value)),
   });
   if (response.ok) {
-    const serialized = await response.text();
-    return deserialize<R>(serialized);
+    return deserialize<R>(await response.text());
   }
   throw new ThalerError(id);
 }

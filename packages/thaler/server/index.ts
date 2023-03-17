@@ -1,4 +1,4 @@
-import { deserialize, serializeAsync } from 'seroval';
+import { fromJSON, serializeAsync, toJSONAsync } from 'seroval';
 import {
   ThalerValue,
   ThalerPostHandler,
@@ -126,7 +126,7 @@ async function pureHandler<T extends ThalerValue, R extends ThalerValue>(
   const request = new Request(id, {
     ...init,
     method: 'POST',
-    body: await serializeAsync(value),
+    body: JSON.stringify(await toJSONAsync(value)),
   });
   return callback(value, request);
 }
@@ -170,6 +170,28 @@ export function $$clone(
   }
 }
 
+export function json<T>(data: T, init: ResponseInit = {}): Response {
+  return new Response(JSON.stringify(data), {
+    status: 200,
+    ...init,
+    headers: {
+      ...init.headers,
+      'Content-Type': 'application/json',
+    },
+  });
+}
+
+export function text(data: string, init: ResponseInit = {}): Response {
+  return new Response(data, {
+    status: 200,
+    ...init,
+    headers: {
+      ...init.headers,
+      'Content-Type': 'text/plain',
+    },
+  });
+}
+
 export async function handleRequest(request: Request): Promise<Response | undefined> {
   const url = new URL(request.url);
   const registration = REGISTRATIONS.get(url.pathname);
@@ -191,26 +213,16 @@ export async function handleRequest(request: Request): Promise<Response | undefi
             request,
           );
         case 'fn': {
-          const { scope, value } = deserialize<DeserializedFunctionBody>(await request.text());
+          const { scope, value } = fromJSON<DeserializedFunctionBody>(await request.json());
           const result = await runWithScope(() => scope, () => callback(value, request));
           const serialized = await serializeAsync(result);
-          return new Response(serialized, {
-            headers: {
-              'Content-Type': 'text/plain',
-            },
-            status: 200,
-          });
+          return text(serialized);
         }
         case 'pure': {
-          const value = deserialize(await request.text());
+          const value = fromJSON(await request.json());
           const result = await callback(value, request);
           const serialized = await serializeAsync(result);
-          return new Response(serialized, {
-            headers: {
-              'Content-Type': 'text/plain',
-            },
-            status: 200,
-          });
+          return text(serialized);
         }
         default:
           throw new Error('unexpected type');

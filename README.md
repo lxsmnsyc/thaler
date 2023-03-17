@@ -251,6 +251,16 @@ interceptRequest((request) => {
 
 ```
 
+## Utilities
+
+### `json(data, responseInit)`
+
+A shortcut function to create a `Response` object with JSON body.
+
+### `text(data, responseInit)`
+
+A shortcut function to create a `Response` object with text body.
+
 ## Integrations
 
 - [Vite](https://github.com/lxsmnsyc/thaler/tree/main/packages/vite)
