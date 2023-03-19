@@ -30,6 +30,12 @@ export default function thalerPlugin(
     async transform(code, id, transformOptions) {
       const isSSR = transformOptions && transformOptions.ssr;
       if (filter(id)) {
+        const pluginOption = [thalerBabel, {
+          source: id,
+          origin: options.origin,
+          prefix: options.prefix,
+          mode: isSSR ? 'server' : 'client',
+        }];
         const plugins: NonNullable<NonNullable<babel.TransformOptions['parserOpts']>['plugins']> = ['jsx'];
         if (/\.[mc]?tsx?$/i.test(id)) {
           plugins.push('typescript');
@@ -37,12 +43,7 @@ export default function thalerPlugin(
         const result = await babel.transformAsync(code, {
           ...options.babel,
           plugins: [
-            [thalerBabel, {
-              source: id,
-              origin: options.origin,
-              prefix: options.prefix,
-              mode: isSSR ? 'server' : 'client',
-            }],
+            pluginOption,
             ...(options.babel?.plugins || []),
           ],
           parserOpts: {
