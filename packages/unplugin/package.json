@@ -33,12 +33,15 @@
     "eslint": "^8.36.0",
     "eslint-config-lxsmnsyc": "^0.5.0",
     "pridepack": "^2.4.1",
+    "thaler": "0.3.0",
     "tslib": "^2.5.0",
     "typescript": "^4.9.5"
   },
+  "peerDependencies": {
+    "thaler": "^0.3"
+  },
   "dependencies": {
     "@rollup/pluginutils": "^5.0.2",
-    "thaler": "0.3.0",
     "unplugin": "^1.3.1"
   },
   "scripts": {
