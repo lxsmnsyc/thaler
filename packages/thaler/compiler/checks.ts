@@ -28,11 +28,16 @@ export type NestedExpression =
   | t.TSTypeAssertion;
 
 export function isNestedExpression(node: t.Node): node is NestedExpression {
-  return t.isParenthesizedExpression(node)
-    || t.isTypeCastExpression(node)
-    || t.isTSAsExpression(node)
-    || t.isTSSatisfiesExpression(node)
-    || t.isTSNonNullExpression(node)
-    || t.isTSTypeAssertion(node)
-    || t.isTSInstantiationExpression(node);
+  switch (node.type) {
+    case 'ParenthesizedExpression':
+    case 'TypeCastExpression':
+    case 'TSAsExpression':
+    case 'TSSatisfiesExpression':
+    case 'TSNonNullExpression':
+    case 'TSTypeAssertion':
+    case 'TSInstantiationExpression':
+      return true;
+    default:
+      return false;
+  }
 }

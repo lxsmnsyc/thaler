@@ -2,8 +2,8 @@
   "target": "es2018",
   "entrypoints": {
     ".": "src/index.ts",
-    "./babel": "./babel/index.ts",
-    "./client": "./client/index.ts",
-    "./server": "./server/index.ts"
+    "./compiler": "compiler/index.ts",
+    "./client": "client/index.ts",
+    "./server": "server/index.ts"
   }
 }
