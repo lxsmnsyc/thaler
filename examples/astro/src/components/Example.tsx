@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-misused-promises */
 import { createResource, createSignal, Suspense } from 'solid-js';
 import { fn$ } from 'thaler';
 
