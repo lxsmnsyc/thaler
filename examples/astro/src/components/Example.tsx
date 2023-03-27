@@ -2,15 +2,16 @@
 import { createResource, createSignal, Suspense } from 'solid-js';
 import { fn$ } from 'thaler';
 
-const prefix = 'Server Count';
+const sleep = (ms: number) => new Promise((res) => {
+  setTimeout(res, ms, true);
+});
 
 export default function Example() {
   const [state, setState] = createSignal(0);
 
+  const prefix = 'Server Count';
+
   const serverCount = fn$(async (value: number) => {
-    const sleep = (ms: number) => new Promise((res) => {
-      setTimeout(res, ms, true);
-    });
     await sleep(1000);
     console.log('Received', value);
     return `${prefix}: ${value}`;
