@@ -1,28 +1,19 @@
-import * as babel from '@babel/core';
 import { describe, expect, it } from 'vitest';
-import plugin, { Options } from '../babel';
+import compile, { Options } from '../compiler';
 
-const options: Options = {
+const serverOptions: Options = {
   origin: 'http://localhost:3000',
   prefix: 'example',
-  source: 'example.tsx',
   mode: 'server',
 };
 
-async function compile(mode: 'server' | 'client', code: string) {
-  const result = await babel.transformAsync(code, {
-    plugins: [
-      [plugin, { ...options, mode }],
-    ],
-    parserOpts: {
-      plugins: [
-        'jsx',
-      ],
-    },
-  });
+const clientOptions: Options = {
+  origin: 'http://localhost:3000',
+  prefix: 'example',
+  mode: 'client',
+};
 
-  return result?.code ?? '';
-}
+const FILE = 'src/index.ts';
 
 describe('server$', () => {
   it('should transform', async () => {
@@ -38,8 +29,8 @@ const example = server$((request) => {
   });
 });
   `;
-    expect(await compile('server', code)).toMatchSnapshot();
-    expect(await compile('client', code)).toMatchSnapshot();
+    expect((await compile(FILE, code, serverOptions)).code).toMatchSnapshot();
+    expect((await compile(FILE, code, clientOptions)).code).toMatchSnapshot();
   });
 });
 describe('get$', () => {
@@ -57,8 +48,8 @@ const example = get$(({ greeting, receiver}) => {
   });
 });
   `;
-    expect(await compile('server', code)).toMatchSnapshot();
-    expect(await compile('client', code)).toMatchSnapshot();
+    expect((await compile(FILE, code, serverOptions)).code).toMatchSnapshot();
+    expect((await compile(FILE, code, clientOptions)).code).toMatchSnapshot();
   });
 });
 describe('post$', () => {
@@ -76,8 +67,8 @@ const example = post$(({ greeting, receiver }) => {
   });
 });
   `;
-    expect(await compile('server', code)).toMatchSnapshot();
-    expect(await compile('client', code)).toMatchSnapshot();
+    expect((await compile(FILE, code, serverOptions)).code).toMatchSnapshot();
+    expect((await compile(FILE, code, clientOptions)).code).toMatchSnapshot();
   });
 });
 describe('fn$', () => {
@@ -92,8 +83,24 @@ const example = fn$(({ greeting, receiver }) => {
   return message;
 });
   `;
-    expect(await compile('server', code)).toMatchSnapshot();
-    expect(await compile('client', code)).toMatchSnapshot();
+    expect((await compile(FILE, code, serverOptions)).code).toMatchSnapshot();
+    expect((await compile(FILE, code, clientOptions)).code).toMatchSnapshot();
+  });
+  it('should transform with local scope', async () => {
+    const code = `
+import { fn$ } from 'thaler';
+
+function test() {
+  const PREFIX = 'Message: ';
+  
+  const example = fn$(({ greeting, receiver }) => {
+    const message = PREFIX + greeting + ', ' + receiver + '!';
+    return message;
+  });
+}
+  `;
+    expect((await compile(FILE, code, serverOptions)).code).toMatchSnapshot();
+    expect((await compile(FILE, code, clientOptions)).code).toMatchSnapshot();
   });
 });
 
@@ -112,7 +119,7 @@ const example = pure$(async ({ greeting, receiver }) => {
   return message;
 });
   `;
-    expect(await compile('server', code)).toMatchSnapshot();
-    expect(await compile('client', code)).toMatchSnapshot();
+    expect((await compile(FILE, code, serverOptions)).code).toMatchSnapshot();
+    expect((await compile(FILE, code, clientOptions)).code).toMatchSnapshot();
   });
 });

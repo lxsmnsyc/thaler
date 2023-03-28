@@ -186,24 +186,7 @@ console.log(await getMessage({ greeting: 'Hello', receiver: 'World' })); // Mess
 ```
 
 > **Note**
-> `fn$` can only capture local scope, and not global scope.
-
-If you're using an imported value inside the callback, it's better to import it inside the callback in the form of dynamic `import`.
-
-```js
-// Don't do this
-import { example } from './example';
-
-fn$(() => {
-  example();
-});
-
-// Do this
-fn$(async () => {
-  const { example } = await import('./example');
-  example();
-});
-```
+> `fn$` can only capture local scope, and not global scope. `fn$` will ignore top-level scopes.
 
 > **Warning**
 > Be careful on capturing scopes, as the captured variables must only be the values that can be serialized by `fn$`. If you're using a value that can't be serialized inside the callback that is declared outside, it cannot be captured by `fn$` and will lead to runtime errors.

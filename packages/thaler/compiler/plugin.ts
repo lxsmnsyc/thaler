@@ -2,7 +2,6 @@ import * as babel from '@babel/core';
 import { addNamed } from '@babel/helper-module-imports';
 import * as t from '@babel/types';
 import { ThalerFunctionTypes } from '../shared/types';
-import { forEach } from './arrays';
 import { getImportSpecifierKey, isPathValid } from './checks';
 import getForeignBindings from './get-foreign-bindings';
 import unwrapNode from './unwrap-node';
@@ -31,7 +30,7 @@ const SOURCE_MODULE = 'thaler';
 const CLIENT_MODULE = 'thaler/client';
 const SERVER_MODULE = 'thaler/server';
 
-export interface Options {
+export interface PluginOptions {
   source: string;
   origin: string;
   prefix?: string;
@@ -44,7 +43,7 @@ interface State extends babel.PluginPass {
   namespaces: Set<t.Identifier>;
   count: number;
   prefix: string;
-  opts: Options;
+  opts: PluginOptions;
 }
 
 function getImportIdentifier(
@@ -72,16 +71,23 @@ function extractImportIdentifiers(
 
   // Identify hooks
   if (mod === SOURCE_MODULE) {
-    forEach(path.node.specifiers, (specifier) => {
-      if (t.isImportSpecifier(specifier)) {
-        const key = getImportSpecifierKey(specifier);
-        if (key in TRACKED_IMPORTS) {
-          ctx.registry.set(specifier.local, TRACKED_IMPORTS[key]);
+    for (let i = 0, len = path.node.specifiers.length; i < len; i++) {
+      const specifier = path.node.specifiers[i];
+      switch (specifier.type) {
+        case 'ImportSpecifier': {
+          const key = getImportSpecifierKey(specifier);
+          if (key in TRACKED_IMPORTS) {
+            ctx.registry.set(specifier.local, TRACKED_IMPORTS[key]);
+          }
         }
-      } else if (t.isImportNamespaceSpecifier(specifier)) {
-        ctx.namespaces.add(specifier.local);
+          break;
+        case 'ImportNamespaceSpecifier':
+          ctx.namespaces.add(specifier.local);
+          break;
+        default:
+          break;
       }
-    });
+    }
   }
 }
 
@@ -141,25 +147,27 @@ function createThalerFunction(
     if (registry.scoping) {
       const scope = getForeignBindings(argument);
       cloneArgs.push(t.arrowFunctionExpression([], t.arrayExpression(scope)));
-      // Add scoping to the arrow function
-      if (ctx.opts.mode === 'server') {
-        const statement = t.isStatement(argument.node.body)
-          ? argument.node.body
-          : t.blockStatement([
-            t.returnStatement(argument.node.body),
-          ]);
-        statement.body = [
-          t.variableDeclaration(
-            'const',
-            [
-              t.variableDeclarator(
-                t.arrayPattern(scope),
-                t.callExpression(getImportIdentifier(ctx, path, IMPORTS.scope), []),
-              ),
-            ],
-          ),
-          ...statement.body,
-        ];
+      if (scope.length) {
+        // Add scoping to the arrow function
+        if (ctx.opts.mode === 'server') {
+          const statement = t.isStatement(argument.node.body)
+            ? argument.node.body
+            : t.blockStatement([
+              t.returnStatement(argument.node.body),
+            ]);
+          statement.body = [
+            t.variableDeclaration(
+              'const',
+              [
+                t.variableDeclarator(
+                  t.arrayPattern(scope),
+                  t.callExpression(getImportIdentifier(ctx, path, IMPORTS.scope), []),
+                ),
+              ],
+            ),
+            ...statement.body,
+          ];
+        }
       }
     }
     // Replace with clone
