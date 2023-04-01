@@ -30,8 +30,8 @@
   "name": "unplugin-thaler",
   "devDependencies": {
     "@types/node": "^18.13.0",
-    "eslint": "^8.36.0",
-    "eslint-config-lxsmnsyc": "^0.5.0",
+    "eslint": "^8.37.0",
+    "eslint-config-lxsmnsyc": "^0.5.1",
     "pridepack": "^2.4.1",
     "thaler": "0.4.0",
     "tslib": "^2.5.0",
