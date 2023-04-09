@@ -123,3 +123,15 @@ const example = pure$(async ({ greeting, receiver }) => {
     expect((await compile(FILE, code, clientOptions)).code).toMatchSnapshot();
   });
 });
+
+describe('ref$', () => {
+  it('should transform', async () => {
+    const code = `
+import { ref$ } from 'thaler';
+
+const example = ref$(() => 'Hello World');
+  `;
+    expect((await compile(FILE, code, serverOptions)).code).toMatchSnapshot();
+    expect((await compile(FILE, code, clientOptions)).code).toMatchSnapshot();
+  });
+});

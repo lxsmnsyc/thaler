@@ -11,6 +11,7 @@ const IMPORTS = {
   register: '$$register',
   clone: '$$clone',
   scope: '$$scope',
+  ref: '$$ref',
 };
 
 interface TrackedImport {
@@ -41,6 +42,7 @@ interface State extends babel.PluginPass {
   imports: Map<string, t.Identifier>;
   registry: Map<t.Identifier, TrackedImport>;
   namespaces: Set<t.Identifier>;
+  refRegistry: Set<t.Identifier>;
   count: number;
   prefix: string;
   opts: PluginOptions;
@@ -78,6 +80,9 @@ function extractImportIdentifiers(
           const key = getImportSpecifierKey(specifier);
           if (key in TRACKED_IMPORTS) {
             ctx.registry.set(specifier.local, TRACKED_IMPORTS[key]);
+          }
+          if (key === 'ref$') {
+            ctx.refRegistry.add(specifier.local);
           }
         }
           break;
@@ -180,6 +185,21 @@ function createThalerFunction(
   }
 }
 
+function createRefFunction(
+  ctx: State,
+  path: babel.NodePath<t.CallExpression | t.OptionalCallExpression>,
+) {
+  // Create an ID
+  const id = `${ctx.prefix}${ctx.count}`;
+  ctx.count += 1;
+  path.replaceWith(
+    t.callExpression(
+      getImportIdentifier(ctx, path, IMPORTS.ref),
+      [t.stringLiteral(id), ...path.node.arguments],
+    ),
+  );
+}
+
 function transformCall(
   ctx: State,
   path: babel.NodePath<t.CallExpression | t.OptionalCallExpression>,
@@ -191,6 +211,9 @@ function transformCall(
       const registry = ctx.registry.get(binding);
       if (registry) {
         createThalerFunction(ctx, path, registry);
+      }
+      if (ctx.refRegistry.has(binding)) {
+        createRefFunction(ctx, path);
       }
     }
   }
@@ -233,6 +256,7 @@ export default function thalerPlugin(): babel.PluginObj<State> {
       this.imports = new Map();
       this.registry = new Map();
       this.namespaces = new Set();
+      this.refRegistry = new Set();
       this.count = 0;
     },
     visitor: {

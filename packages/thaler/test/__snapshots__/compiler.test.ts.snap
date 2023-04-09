@@ -137,6 +137,18 @@ const _pure = _$$register(\\"pure\\", \\"http://localhost:3000/example/f0b3b6fa-
 const example = _$$clone(_pure);"
 `;
 
+exports[`ref$ > should transform 1`] = `
+"import { $$ref as _$$ref } from \\"thaler/server\\";
+import { ref$ } from 'thaler';
+const example = _$$ref(\\"http://localhost:3000/example/f0b3b6fa-0\\", () => 'Hello World');"
+`;
+
+exports[`ref$ > should transform 2`] = `
+"import { $$ref as _$$ref } from \\"thaler/client\\";
+import { ref$ } from 'thaler';
+const example = _$$ref(\\"http://localhost:3000/example/f0b3b6fa-0\\", () => 'Hello World');"
+`;
+
 exports[`server$ > should transform 1`] = `
 "import { $$clone as _$$clone } from \\"thaler/server\\";
 import { $$register as _$$register } from \\"thaler/server\\";

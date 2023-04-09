@@ -1,6 +1,10 @@
-import { fromJSON, serializeAsync, toJSONAsync } from 'seroval';
 import {
-  ThalerValue,
+  createReference,
+  fromJSON,
+  serializeAsync,
+  toJSONAsync,
+} from 'seroval';
+import {
   ThalerPostHandler,
   ThalerPostParam,
   ThalerFnHandler,
@@ -25,9 +29,9 @@ type GetHandlerRegistration<P extends ThalerGetParam> =
   [type: 'get', id: string, callback: ThalerGetHandler<P>];
 type PostHandlerRegistration<P extends ThalerPostParam> =
   [type: 'post', id: string, callback: ThalerPostHandler<P>];
-type FunctionHandlerRegistration<T extends ThalerValue, R extends ThalerValue> =
+type FunctionHandlerRegistration<T, R> =
   [type: 'fn', id: string, callback: ThalerFnHandler<T, R>];
-type PureHandlerRegistration<T extends ThalerValue, R extends ThalerValue> =
+type PureHandlerRegistration<T, R> =
   [type: 'pure', id: string, callback: ThalerPureHandler<T, R>];
 
 type HandlerRegistration =
@@ -86,9 +90,9 @@ async function getHandler<P extends ThalerGetParam>(
   return callback(search, request);
 }
 
-let SCOPE: ThalerValue[] | undefined;
+let SCOPE: unknown[] | undefined;
 
-function runWithScope<T>(scope: () => ThalerValue[], callback: () => T): T {
+function runWithScope<T>(scope: () => unknown[], callback: () => T): T {
   const parent = SCOPE;
   SCOPE = scope();
   try {
@@ -98,10 +102,10 @@ function runWithScope<T>(scope: () => ThalerValue[], callback: () => T): T {
   }
 }
 
-async function fnHandler<T extends ThalerValue, R extends ThalerValue>(
+async function fnHandler<T, R>(
   id: string,
   callback: ThalerFnHandler<T, R>,
-  scope: () => ThalerValue[],
+  scope: () => unknown[],
   value: T,
   init: RequestInit = {},
 ) {
@@ -116,7 +120,7 @@ async function fnHandler<T extends ThalerValue, R extends ThalerValue>(
   });
 }
 
-async function pureHandler<T extends ThalerValue, R extends ThalerValue>(
+async function pureHandler<T, R>(
   id: string,
   callback: ThalerPureHandler<T, R>,
   value: T,
@@ -131,13 +135,13 @@ async function pureHandler<T extends ThalerValue, R extends ThalerValue>(
   return callback(value, request);
 }
 
-export function $$scope(): ThalerValue[] {
+export function $$scope(): unknown[] {
   return SCOPE!;
 }
 
 export function $$clone(
   [type, id, callback]: HandlerRegistration,
-  scope: () => ThalerValue[],
+  scope: () => unknown[],
 ): ThalerFunctions {
   switch (type) {
     case 'server':
@@ -222,4 +226,8 @@ export async function handleRequest(request: Request): Promise<Response | undefi
     }
   }
   return undefined;
+}
+
+export function $$ref<T>(id: string, value: T): T {
+  return createReference(id, value);
 }

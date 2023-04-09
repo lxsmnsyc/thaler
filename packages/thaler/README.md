@@ -234,7 +234,7 @@ interceptRequest((request) => {
 
 ```
 
-## Utilities
+## `thaler/utils`
 
 ### `json(data, responseInit)`
 
@@ -243,6 +243,23 @@ A shortcut function to create a `Response` object with JSON body.
 ### `text(data, responseInit)`
 
 A shortcut function to create a `Response` object with text body.
+
+### `debounce(handler, options)`
+
+Creates a debounced version of the async handler. A debounced handler will defer its function call until no calls have been made within the given timeframe.
+
+Options:
+
+- `key`: Required. A function that produces a unique string based on the arguments. This is used to map the function call to its timer.
+- `timeout`: How long (in milliseconds) before a debounce call goes through. Defaults to `250`.
+
+### `throttle(handler, options)`
+
+Creates a throttled version of the async handler. A throttled handler calls once for every given timeframe.
+
+Options:
+
+- `key`: Required. A function that produces a unique string based on the arguments. This is used to map the function call to its timer.
 
 ## Integrations
 

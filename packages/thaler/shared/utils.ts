@@ -1,6 +1,5 @@
 import { toJSONAsync } from 'seroval';
 import {
-  ThalerValue,
   ThalerPostParam,
   ThalerFunctionTypes,
   ThalerGetParam,
@@ -21,13 +20,13 @@ export function patchHeaders(init: RequestInit, type: ThalerFunctionTypes) {
 }
 
 export interface FunctionBody {
-  scope: () => ThalerValue[];
-  value: ThalerValue;
+  scope: () => unknown[];
+  value: unknown;
 }
 
-export interface DeserializedFunctionBody extends Record<string, ThalerValue> {
-  scope: ThalerValue[];
-  value: ThalerValue;
+export interface DeserializedFunctionBody {
+  scope: unknown[];
+  value: unknown;
 }
 
 export async function serializeFunctionBody({ scope, value }: FunctionBody) {
