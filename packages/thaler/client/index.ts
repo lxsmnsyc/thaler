@@ -152,5 +152,5 @@ export function $$clone(
 }
 
 export function $$ref<T>(id: string, value: T): T {
-  return createReference(id, value);
+  return createReference(`thaler--${id}`, value);
 }

@@ -220,6 +220,9 @@ export async function handleRequest(request: Request): Promise<Response | undefi
           throw new Error('unexpected type');
       }
     } catch (error) {
+      if (import.meta.env.DEV) {
+        console.error(error);
+      }
       return new Response(`function "${id}" threw an unhandled server-side error.`, {
         status: 500,
       });
@@ -229,5 +232,5 @@ export async function handleRequest(request: Request): Promise<Response | undefi
 }
 
 export function $$ref<T>(id: string, value: T): T {
-  return createReference(id, value);
+  return createReference(`thaler--${id}`, value);
 }

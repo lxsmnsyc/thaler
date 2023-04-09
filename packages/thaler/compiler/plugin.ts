@@ -172,6 +172,8 @@ function createThalerFunction(
             ),
             ...statement.body,
           ];
+
+          argument.node.body = statement;
         }
       }
     }
