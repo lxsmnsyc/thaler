@@ -56,17 +56,17 @@ interface DebounceData<R> {
   timeout: ReturnType<typeof setTimeout>;
 }
 
-export function debounce<T extends any[], R>(
-  callback: (...args: T) => Promise<R>,
-  options: DebounceOptions<T>,
-): (...args: T) => Promise<R> {
-  const cache = new Map<string, DebounceData<R>>();
+export function debounce<T extends ((...args: any[]) => Promise<any>)>(
+  callback: T,
+  options: DebounceOptions<Parameters<T>>,
+): T {
+  const cache = new Map<string, DebounceData<ReturnType<T>>>();
 
-  function resolveData(current: DebounceData<R>, key: string, args: T) {
+  function resolveData(current: DebounceData<ReturnType<T>>, key: string, args: Parameters<T>) {
     try {
       callback.apply(callback, args).then(
         (value) => {
-          current.deferred.resolve(value);
+          current.deferred.resolve(value as ReturnType<T>);
           cache.delete(key);
         },
         (value) => {
@@ -80,7 +80,7 @@ export function debounce<T extends any[], R>(
     }
   }
 
-  return (...args: T) => {
+  return ((...args: Parameters<T>): ReturnType<T> => {
     const key = options.key(...args);
     const current = cache.get(key);
     if (current) {
@@ -89,9 +89,9 @@ export function debounce<T extends any[], R>(
         () => resolveData(current, key, args),
         options.timeout || DEFAULT_DEBOUNCE_TIMEOUT,
       );
-      return current.deferred.promise;
+      return current.deferred.promise as ReturnType<T>;
     }
-    const record: DebounceData<R> = {
+    const record: DebounceData<ReturnType<T>> = {
       deferred: createDeferred(),
       timeout: setTimeout(
         () => resolveData(record, key, args),
@@ -99,8 +99,8 @@ export function debounce<T extends any[], R>(
       ),
     };
     cache.set(key, record);
-    return record.deferred.promise;
-  };
+    return record.deferred.promise as ReturnType<T>;
+  }) as unknown as T;
 }
 
 export interface ThrottleOptions<T extends any[]> {
@@ -111,17 +111,17 @@ interface ThrottleData<R> {
   deferred: Deferred<R>;
 }
 
-export function throttle<T extends any[], R>(
-  callback: (...args: T) => Promise<R>,
-  options: ThrottleOptions<T>,
-): (...args: T) => Promise<R> {
-  const cache = new Map<string, ThrottleData<R>>();
+export function throttle<T extends ((...args: any[]) => Promise<any>)>(
+  callback: T,
+  options: ThrottleOptions<Parameters<T>>,
+): T {
+  const cache = new Map<string, ThrottleData<ReturnType<T>>>();
 
-  function resolveData(current: ThrottleData<R>, key: string, args: T) {
+  function resolveData(current: ThrottleData<ReturnType<T>>, key: string, args: Parameters<T>) {
     try {
       callback.apply(callback, args).then(
         (value) => {
-          current.deferred.resolve(value);
+          current.deferred.resolve(value as ReturnType<T>);
           cache.delete(key);
         },
         (value) => {
@@ -135,17 +135,17 @@ export function throttle<T extends any[], R>(
     }
   }
 
-  return (...args: T) => {
+  return ((...args: Parameters<T>): ReturnType<T> => {
     const key = options.key(...args);
     const current = cache.get(key);
     if (current) {
-      return current.deferred.promise;
+      return current.deferred.promise as ReturnType<T>;
     }
-    const record: ThrottleData<R> = {
+    const record: ThrottleData<ReturnType<T>> = {
       deferred: createDeferred(),
     };
     cache.set(key, record);
     resolveData(record, key, args);
-    return record.deferred.promise;
-  };
+    return record.deferred.promise as ReturnType<T>;
+  }) as unknown as T;
 }
