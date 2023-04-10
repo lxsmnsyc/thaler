@@ -1,6 +1,7 @@
 import * as babel from '@babel/core';
 import { addNamed } from '@babel/helper-module-imports';
 import * as t from '@babel/types';
+import { parse as parsePath } from 'path';
 import { ThalerFunctionTypes } from '../shared/types';
 import { getImportSpecifierKey, isPathValid } from './checks';
 import getForeignBindings from './get-foreign-bindings';
@@ -36,6 +37,7 @@ export interface PluginOptions {
   origin: string;
   prefix?: string;
   mode: 'server' | 'client';
+  env?: 'development' | 'production';
 }
 
 interface State extends babel.PluginPass {
@@ -108,6 +110,26 @@ function getRootStatementPath(path: babel.NodePath) {
   return path;
 }
 
+function getDescriptiveName(path: babel.NodePath) {
+  let current: babel.NodePath | null = path;
+  while (current) {
+    if (
+      t.isFunctionDeclaration(current.node)
+      || t.isFunctionExpression(current.node)
+    ) {
+      if (current.node.id) {
+        return current.node.id.name;
+      }
+    } else if (t.isVariableDeclarator(current.node)) {
+      if (t.isIdentifier(current.node.id)) {
+        return current.node.id.name;
+      }
+    }
+    current = current.parentPath;
+  }
+  return 'anonymous';
+}
+
 function createThalerFunction(
   ctx: State,
   path: babel.NodePath<t.CallExpression | t.OptionalCallExpression>,
@@ -122,7 +144,10 @@ function createThalerFunction(
     )
   ) {
     // Create an ID
-    const id = `${ctx.prefix}${ctx.count}`;
+    let id = `${ctx.prefix}${ctx.count}`;
+    if (ctx.opts.env !== 'production') {
+      id += `-${getDescriptiveName(argument)}`;
+    }
     ctx.count += 1;
     // Create the call expression
     const args: t.Expression[] = [t.stringLiteral(registry.type), t.stringLiteral(id)];
@@ -248,7 +273,12 @@ function getPrefix(ctx: State) {
   } else if (ctx.filename) {
     file = ctx.filename;
   }
-  return `${ctx.opts.origin}/${prefix}/${xxHash32(file).toString(16)}-`;
+  const base = `${ctx.opts.origin}/${prefix}/${xxHash32(file).toString(16)}-`;
+  if (ctx.opts.env === 'production') {
+    return base;
+  }
+  const parsed = parsePath(file);
+  return `${base}${parsed.name}-`;
 }
 
 export default function thalerPlugin(): babel.PluginObj<State> {

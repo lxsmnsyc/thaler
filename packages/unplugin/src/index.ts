@@ -20,15 +20,21 @@ const thalerPlugin = createUnplugin((options: ThalerPluginOptions) => {
     options.filter?.exclude || DEFAULT_EXCLUDE,
   );
 
+  let env: ThalerPluginOptions['env'];
+
   return {
     name: 'thaler',
     vite: {
       enforce: 'pre',
+      configResolved(config) {
+        env = config.mode !== 'production' ? 'development' : 'production';
+      },
       transform(code, id, opts) {
         if (filter(id)) {
           return compile(id, code, {
             ...options,
             mode: opts?.ssr ? 'server' : 'client',
+            env,
           });
         }
         return undefined;
