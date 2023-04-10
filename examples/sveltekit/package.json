@@ -1,6 +1,6 @@
 {
 	"name": "sveltekit-demo",
-	"version": "0.5.0",
+	"version": "0.5.1",
 	"private": true,
 	"scripts": {
 		"dev": "vite dev",
@@ -11,7 +11,7 @@
 		"lint": "eslint ."
 	},
 	"dependencies": {
-		"thaler": "0.5.0"
+		"thaler": "0.5.1"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^2.0.0",
@@ -23,7 +23,7 @@
 		"svelte-check": "^3.0.1",
 		"tslib": "^2.4.1",
 		"typescript": "^4.9.5",
-		"unplugin-thaler": "0.5.0",
+		"unplugin-thaler": "0.5.1",
 		"vite": "^4.2.0"
 	},
 	"type": "module"
