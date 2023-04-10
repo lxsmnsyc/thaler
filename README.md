@@ -24,6 +24,12 @@ pnpm add thaler
 
 Another biggest benefit of this is that, not only it is great for isomorphic fullstack apps (i.e. metaframeworks like NextJS, SolidStart, etc.), if you're using TypeScript, type inference is also consistent too, so no need for extra work to manually wire-in types for both server and client.
 
+## Examples
+
+- [Astro](https://codesandbox.io/s/github/LXSMNSYC/thaler/tree/main/examples/astro)
+- [SvelteKit](https://codesandbox.io/s/github/LXSMNSYC/thaler/tree/main/examples/sveltekit)
+- [SolidStart](https://codesandbox.io/s/github/LXSMNSYC/thaler/tree/main/examples/solidstart)
+
 ## Functions
 
 ### `server$`
@@ -234,7 +240,7 @@ interceptRequest((request) => {
 
 ```
 
-## Utilities
+## `thaler/utils`
 
 ### `json(data, responseInit)`
 
@@ -243,6 +249,23 @@ A shortcut function to create a `Response` object with JSON body.
 ### `text(data, responseInit)`
 
 A shortcut function to create a `Response` object with text body.
+
+### `debounce(handler, options)`
+
+Creates a debounced version of the async handler. A debounced handler will defer its function call until no calls have been made within the given timeframe.
+
+Options:
+
+- `key`: Required. A function that produces a unique string based on the arguments. This is used to map the function call to its timer.
+- `timeout`: How long (in milliseconds) before a debounce call goes through. Defaults to `250`.
+
+### `throttle(handler, options)`
+
+Creates a throttled version of the async handler. A throttled handler calls once for every given timeframe.
+
+Options:
+
+- `key`: Required. A function that produces a unique string based on the arguments. This is used to map the function call to its timer.
 
 ## Integrations
 

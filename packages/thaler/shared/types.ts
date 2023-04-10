@@ -12,9 +12,9 @@ export type ThalerPostHandler<P extends ThalerPostParam> =
   (formData: P, ctx: Request) => MaybePromise<Response>;
 export type ThalerGetHandler<P extends ThalerGetParam> =
   (search: P, ctx: Request) => MaybePromise<Response>;
-export type ThalerFnHandler<T extends ThalerValue, R extends ThalerValue> =
+export type ThalerFnHandler<T, R> =
   (value: T, ctx: Request) => MaybePromise<R>;
-export type ThalerPureHandler<T extends ThalerValue, R extends ThalerValue> =
+export type ThalerPureHandler<T, R> =
   (value: T, ctx: Request) => MaybePromise<R>;
 
 export type ThalerGenericHandler =
@@ -49,18 +49,12 @@ export interface ThalerGetFunction<P extends ThalerGetParam> extends ThalerBaseF
 
 export type ThalerFunctionInit = Omit<RequestInit, 'method' | 'body'>;
 
-export interface ThalerFunction<
-  T extends ThalerValue,
-  R extends ThalerValue,
-> extends ThalerBaseFunction {
+export interface ThalerFunction<T, R> extends ThalerBaseFunction {
   type: 'fn';
   (value: T, init?: ThalerFunctionInit): Promise<R>;
 }
 
-export interface ThalerPureFunction<
-  T extends ThalerValue,
-  R extends ThalerValue,
-> extends ThalerBaseFunction {
+export interface ThalerPureFunction<T, R> extends ThalerBaseFunction {
   type: 'pure';
   (value: T, init?: ThalerFunctionInit): Promise<R>;
 }

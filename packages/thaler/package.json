@@ -17,8 +17,8 @@
     "@types/babel__core": "^7.20.0",
     "@types/babel__traverse": "^7.18.3",
     "@types/node": "^18.13.0",
-    "eslint": "^8.36.0",
-    "eslint-config-lxsmnsyc": "^0.5.0",
+    "eslint": "^8.37.0",
+    "eslint-config-lxsmnsyc": "^0.5.1",
     "pridepack": "2.4.1",
     "tslib": "^2.4.1",
     "typescript": "^4.9.4",
@@ -29,7 +29,7 @@
     "@babel/helper-module-imports": "^7.18.6",
     "@babel/traverse": "^7.21.2",
     "@babel/types": "^7.21.2",
-    "seroval": "^0.5.0"
+    "seroval": "^0.7.0"
   },
   "scripts": {
     "prepublishOnly": "pridepack clean && pridepack build",
@@ -66,6 +66,9 @@
       ],
       "server": [
         "./dist/types/server/index.d.ts"
+      ],
+      "utils": [
+        "./dist/types/utils/index.d.ts"
       ]
     }
   },
@@ -108,6 +111,15 @@
       "require": "./dist/cjs/production/server.cjs",
       "import": "./dist/esm/production/server.mjs",
       "types": "./dist/types/server/index.d.ts"
+    },
+    "./utils": {
+      "development": {
+        "require": "./dist/cjs/development/utils.cjs",
+        "import": "./dist/esm/development/utils.mjs"
+      },
+      "require": "./dist/cjs/production/utils.cjs",
+      "import": "./dist/esm/production/utils.mjs",
+      "types": "./dist/types/utils/index.d.ts"
     }
   }
 }

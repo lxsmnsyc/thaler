@@ -1,6 +1,10 @@
-import { fromJSON, serializeAsync, toJSONAsync } from 'seroval';
 import {
-  ThalerValue,
+  createReference,
+  fromJSON,
+  serializeAsync,
+  toJSONAsync,
+} from 'seroval';
+import {
   ThalerPostHandler,
   ThalerPostParam,
   ThalerFnHandler,
@@ -25,9 +29,9 @@ type GetHandlerRegistration<P extends ThalerGetParam> =
   [type: 'get', id: string, callback: ThalerGetHandler<P>];
 type PostHandlerRegistration<P extends ThalerPostParam> =
   [type: 'post', id: string, callback: ThalerPostHandler<P>];
-type FunctionHandlerRegistration<T extends ThalerValue, R extends ThalerValue> =
+type FunctionHandlerRegistration<T, R> =
   [type: 'fn', id: string, callback: ThalerFnHandler<T, R>];
-type PureHandlerRegistration<T extends ThalerValue, R extends ThalerValue> =
+type PureHandlerRegistration<T, R> =
   [type: 'pure', id: string, callback: ThalerPureHandler<T, R>];
 
 type HandlerRegistration =
@@ -86,9 +90,9 @@ async function getHandler<P extends ThalerGetParam>(
   return callback(search, request);
 }
 
-let SCOPE: ThalerValue[] | undefined;
+let SCOPE: unknown[] | undefined;
 
-function runWithScope<T>(scope: () => ThalerValue[], callback: () => T): T {
+function runWithScope<T>(scope: () => unknown[], callback: () => T): T {
   const parent = SCOPE;
   SCOPE = scope();
   try {
@@ -98,25 +102,23 @@ function runWithScope<T>(scope: () => ThalerValue[], callback: () => T): T {
   }
 }
 
-async function fnHandler<T extends ThalerValue, R extends ThalerValue>(
+async function fnHandler<T, R>(
   id: string,
   callback: ThalerFnHandler<T, R>,
-  scope: () => ThalerValue[],
+  scope: () => unknown[],
   value: T,
   init: RequestInit = {},
 ) {
   patchHeaders(init, 'fn');
-  return runWithScope(scope, async () => {
-    const request = new Request(id, {
-      ...init,
-      method: 'POST',
-      body: await serializeFunctionBody({ scope, value }),
-    });
-    return callback(value, request);
+  const request = new Request(id, {
+    ...init,
+    method: 'POST',
+    body: await serializeFunctionBody({ scope, value }),
   });
+  return runWithScope(scope, () => callback(value, request));
 }
 
-async function pureHandler<T extends ThalerValue, R extends ThalerValue>(
+async function pureHandler<T, R>(
   id: string,
   callback: ThalerPureHandler<T, R>,
   value: T,
@@ -131,13 +133,13 @@ async function pureHandler<T extends ThalerValue, R extends ThalerValue>(
   return callback(value, request);
 }
 
-export function $$scope(): ThalerValue[] {
+export function $$scope(): unknown[] {
   return SCOPE!;
 }
 
 export function $$clone(
   [type, id, callback]: HandlerRegistration,
-  scope: () => ThalerValue[],
+  scope: () => unknown[],
 ): ThalerFunctions {
   switch (type) {
     case 'server':
@@ -170,28 +172,6 @@ export function $$clone(
   }
 }
 
-export function json<T>(data: T, init: ResponseInit = {}): Response {
-  return new Response(JSON.stringify(data), {
-    status: 200,
-    ...init,
-    headers: {
-      ...init.headers,
-      'Content-Type': 'application/json',
-    },
-  });
-}
-
-export function text(data: string, init: ResponseInit = {}): Response {
-  return new Response(data, {
-    status: 200,
-    ...init,
-    headers: {
-      ...init.headers,
-      'Content-Type': 'text/plain',
-    },
-  });
-}
-
 export async function handleRequest(request: Request): Promise<Response | undefined> {
   const url = new URL(request.url);
   const registration = REGISTRATIONS.get(url.pathname);
@@ -216,22 +196,39 @@ export async function handleRequest(request: Request): Promise<Response | undefi
           const { scope, value } = fromJSON<DeserializedFunctionBody>(await request.json());
           const result = await runWithScope(() => scope, () => callback(value, request));
           const serialized = await serializeAsync(result);
-          return text(serialized);
+          return new Response(serialized, {
+            status: 200,
+            headers: {
+              'Content-Type': 'text/plain',
+            },
+          });
         }
         case 'pure': {
           const value = fromJSON(await request.json());
           const result = await callback(value, request);
           const serialized = await serializeAsync(result);
-          return text(serialized);
+          return new Response(serialized, {
+            status: 200,
+            headers: {
+              'Content-Type': 'text/plain',
+            },
+          });
         }
         default:
           throw new Error('unexpected type');
       }
     } catch (error) {
+      if (import.meta.env.DEV) {
+        console.error(error);
+      }
       return new Response(`function "${id}" threw an unhandled server-side error.`, {
         status: 500,
       });
     }
   }
   return undefined;
+}
+
+export function $$ref<T>(id: string, value: T): T {
+  return createReference(`thaler--${id}`, value);
 }

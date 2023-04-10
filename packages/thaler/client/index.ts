@@ -1,7 +1,6 @@
-import { deserialize, toJSONAsync } from 'seroval';
+import { createReference, deserialize, toJSONAsync } from 'seroval';
 import ThalerError from '../shared/error';
 import {
-  ThalerValue,
   ThalerPostInit,
   ThalerPostParam,
   ThalerFunctionInit,
@@ -84,9 +83,9 @@ async function getHandler<P extends ThalerGetParam>(
   });
 }
 
-async function fnHandler<T extends ThalerValue, R extends ThalerValue>(
+async function fnHandler<T, R>(
   id: string,
-  scope: () => ThalerValue[],
+  scope: () => unknown[],
   value: T,
   init: ThalerFunctionInit = {},
 ): Promise<R> {
@@ -101,7 +100,7 @@ async function fnHandler<T extends ThalerValue, R extends ThalerValue>(
   throw new ThalerError(id);
 }
 
-async function pureHandler<T extends ThalerValue, R extends ThalerValue>(
+async function pureHandler<T, R>(
   id: string,
   value: T,
   init: ThalerFunctionInit = {},
@@ -119,7 +118,7 @@ async function pureHandler<T extends ThalerValue, R extends ThalerValue>(
 
 export function $$clone(
   { type, id }: HandlerRegistrationResult,
-  scope: () => ThalerValue[],
+  scope: () => unknown[],
 ): ThalerFunctions {
   switch (type) {
     case 'server':
@@ -150,4 +149,8 @@ export function $$clone(
     default:
       throw new Error('unknown registration type');
   }
+}
+
+export function $$ref<T>(id: string, value: T): T {
+  return createReference(`thaler--${id}`, value);
 }

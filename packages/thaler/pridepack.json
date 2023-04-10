@@ -4,6 +4,7 @@
     ".": "src/index.ts",
     "./compiler": "compiler/index.ts",
     "./client": "client/index.ts",
-    "./server": "server/index.ts"
+    "./server": "server/index.ts",
+    "./utils": "utils/index.ts"
   }
 }
