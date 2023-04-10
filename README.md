@@ -24,6 +24,12 @@ pnpm add thaler
 
 Another biggest benefit of this is that, not only it is great for isomorphic fullstack apps (i.e. metaframeworks like NextJS, SolidStart, etc.), if you're using TypeScript, type inference is also consistent too, so no need for extra work to manually wire-in types for both server and client.
 
+## Examples
+
+- [Astro](https://codesandbox.io/s/github/LXSMNSYC/thaler/tree/main/examples/astro)
+- [SvelteKit](https://codesandbox.io/s/github/LXSMNSYC/thaler/tree/main/examples/sveltekit)
+- [SolidStart](https://codesandbox.io/s/github/LXSMNSYC/thaler/tree/main/examples/solidstart)
+
 ## Functions
 
 ### `server$`
