@@ -97,6 +97,9 @@ async function fnHandler<T, R>(
   if (response.ok) {
     return deserialize<R>(await response.text());
   }
+  if (import.meta.env.DEV) {
+    throw deserialize(await response.text());
+  }
   throw new ThalerError(id);
 }
 
@@ -112,6 +115,9 @@ async function pureHandler<T, R>(
   });
   if (response.ok) {
     return deserialize<R>(await response.text());
+  }
+  if (import.meta.env.DEV) {
+    throw deserialize(await response.text());
   }
   throw new ThalerError(id);
 }

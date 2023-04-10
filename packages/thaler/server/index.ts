@@ -220,6 +220,9 @@ export async function handleRequest(request: Request): Promise<Response | undefi
     } catch (error) {
       if (import.meta.env.DEV) {
         console.error(error);
+        return new Response(await serializeAsync(error), {
+          status: 500,
+        });
       }
       return new Response(`function "${id}" threw an unhandled server-side error.`, {
         status: 500,
