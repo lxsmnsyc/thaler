@@ -110,14 +110,12 @@ async function fnHandler<T, R>(
   init: RequestInit = {},
 ) {
   patchHeaders(init, 'fn');
-  return runWithScope(scope, async () => {
-    const request = new Request(id, {
-      ...init,
-      method: 'POST',
-      body: await serializeFunctionBody({ scope, value }),
-    });
-    return callback(value, request);
+  const request = new Request(id, {
+    ...init,
+    method: 'POST',
+    body: await serializeFunctionBody({ scope, value }),
   });
+  return runWithScope(scope, () => callback(value, request));
 }
 
 async function pureHandler<T, R>(
