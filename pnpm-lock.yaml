@@ -57,7 +57,7 @@ importers:
         specifier: ^4.9.4
         version: 4.9.5
       unplugin-thaler:
-        specifier: 0.5.1
+        specifier: 0.5.2
         version: link:../../packages/unplugin
 
   examples/solidstart:
@@ -97,7 +97,7 @@ importers:
         specifier: ^4.9.4
         version: 4.9.5
       unplugin-thaler:
-        specifier: 0.5.1
+        specifier: 0.5.2
         version: link:../../packages/unplugin
       vite:
         specifier: ^4.1.4
@@ -137,7 +137,7 @@ importers:
         specifier: ^4.9.5
         version: 4.9.5
       unplugin-thaler:
-        specifier: 0.5.1
+        specifier: 0.5.2
         version: link:../../packages/unplugin
       vite:
         specifier: ^4.2.0
@@ -223,7 +223,7 @@ importers:
   packages/vite:
     dependencies:
       unplugin-thaler:
-        specifier: 0.5.1
+        specifier: 0.5.2
         version: link:../unplugin
     devDependencies:
       '@types/node':
