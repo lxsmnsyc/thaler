@@ -1,6 +1,6 @@
 {
   "name": "solid-start-demo",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "private": true,
   "scripts": {
     "dev": "solid-start dev",
@@ -14,7 +14,7 @@
     "postcss": "^8.4.21",
     "solid-start-node": "^0.2.19",
     "typescript": "^4.9.4",
-    "unplugin-thaler": "0.5.1",
+    "unplugin-thaler": "0.5.2",
     "vite": "^4.1.4"
   },
   "dependencies": {
