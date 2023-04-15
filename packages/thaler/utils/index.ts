@@ -44,6 +44,8 @@ function createDeferred<T>(): Deferred<T> {
   };
 }
 
+export type AsyncFunction = (...args: unknown[]) => Promise<unknown>;
+
 const DEFAULT_DEBOUNCE_TIMEOUT = 250;
 
 export interface DebounceOptions<T extends any[]> {
@@ -56,7 +58,7 @@ interface DebounceData<R> {
   timeout: ReturnType<typeof setTimeout>;
 }
 
-export function debounce<T extends ((...args: any[]) => Promise<any>)>(
+export function debounce<T extends AsyncFunction>(
   callback: T,
   options: DebounceOptions<Parameters<T>>,
 ): T {
@@ -112,7 +114,7 @@ interface ThrottleData<R> {
   deferred: Deferred<R>;
 }
 
-export function throttle<T extends ((...args: any[]) => Promise<any>)>(
+export function throttle<T extends AsyncFunction>(
   callback: T,
   options: ThrottleOptions<Parameters<T>>,
 ): T {
@@ -159,7 +161,7 @@ export interface RetryOptions {
 const DEFAULT_RETRY_INTERVAL = 5000;
 const INITIAL_RETRY_INTERVAL = 10;
 
-export function retry<T extends ((...args: any[]) => Promise<any>)>(
+export function retry<T extends AsyncFunction>(
   callback: T,
   options: RetryOptions,
 ): T {
@@ -211,7 +213,7 @@ export function retry<T extends ((...args: any[]) => Promise<any>)>(
   }) as unknown as T;
 }
 
-export function timeout<T extends ((...args: any[]) => Promise<any>)>(
+export function timeout<T extends AsyncFunction>(
   callback: T,
   ms: number,
 ): T {
