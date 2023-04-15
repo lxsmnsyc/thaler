@@ -65,20 +65,29 @@ export function debounce<T extends AsyncFunction>(
   const cache = new Map<string, DebounceData<ReturnType<T>>>();
 
   function resolveData(current: DebounceData<ReturnType<T>>, key: string, args: Parameters<T>) {
+    const instance = current.timeout;
     try {
       callback.apply(callback, args).then(
         (value) => {
-          current.deferred.resolve(value as ReturnType<T>);
-          cache.delete(key);
+          if (instance === current.timeout) {
+            current.deferred.resolve(value as ReturnType<T>);
+            cache.delete(key);
+          }
         },
         (value) => {
-          current.deferred.reject(value);
-          cache.delete(key);
+          if (instance === current.timeout) {
+            current.deferred.reject(value);
+            cache.delete(key);
+          }
         },
       );
     } catch (err) {
-      current.deferred.reject(err);
-      cache.delete(key);
+      if (instance === current.timeout) {
+        current.deferred.reject(err);
+        cache.delete(key);
+      } else {
+        throw err;
+      }
     }
   }
 
