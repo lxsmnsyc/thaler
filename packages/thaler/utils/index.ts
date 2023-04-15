@@ -75,10 +75,8 @@ export function debounce<T extends AsyncFunction>(
           }
         },
         (value) => {
-          if (instance === current.timeout) {
-            current.deferred.reject(value);
-            cache.delete(key);
-          }
+          current.deferred.reject(value);
+          cache.delete(key);
         },
       );
     } catch (err) {
