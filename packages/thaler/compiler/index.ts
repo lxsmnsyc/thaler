@@ -11,6 +11,7 @@ export default async function compile(
 ) {
   const pluginOption = [thalerBabel, {
     source: id,
+    origin: options.origin,
     prefix: options.prefix,
     mode: options.mode,
   }];

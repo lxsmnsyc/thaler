@@ -36,6 +36,7 @@ const SERVER_MODULE = 'thaler/server';
 
 export interface PluginOptions {
   source: string;
+  origin: string;
   prefix?: string;
   mode: 'server' | 'client';
   env?: 'development' | 'production';
@@ -274,7 +275,7 @@ function getPrefix(ctx: State) {
   } else if (ctx.filename) {
     file = ctx.filename;
   }
-  const base = `/${prefix}/${xxHash32(file).toString(16)}-`;
+  const base = `${ctx.opts.origin}/${prefix}/${xxHash32(file).toString(16)}-`;
   if (ctx.opts.env === 'production') {
     return base;
   }

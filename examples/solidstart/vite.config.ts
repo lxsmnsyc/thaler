@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [
     solid(),
 		thalerPlugin.vite({
-			prefix: 'api/__thaler',
+			origin: 'http://localhost:3000/api',
 			mode: 'server',
 		}),
   ]
