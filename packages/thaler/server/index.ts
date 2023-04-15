@@ -51,29 +51,39 @@ export function $$register(
   return registration;
 }
 
+function createResponseInit(): Required<ResponseInit> {
+  return {
+    headers: {
+      'Content-Type': 'text/plain',
+    },
+    status: 200,
+    statusText: 'OK',
+  };
+}
+
 async function serverHandler(
   id: string,
   callback: ThalerServerHandler,
   init: RequestInit,
 ) {
   patchHeaders(init, 'server');
-  const request = new Request(id, init);
-  return callback(request);
+  return callback(new Request(id, init));
 }
 
-async function actionHandler<P extends ThalerPostParam>(
+async function postHandler<P extends ThalerPostParam>(
   id: string,
   callback: ThalerPostHandler<P>,
   formData: P,
   init: RequestInit = {},
 ) {
   patchHeaders(init, 'post');
-  const request = new Request(id, {
-    ...init,
-    method: 'POST',
-    body: toFormData(formData),
+  return callback(formData, {
+    request: new Request(id, {
+      ...init,
+      method: 'POST',
+      body: toFormData(formData),
+    }),
   });
-  return callback(formData, request);
 }
 
 async function getHandler<P extends ThalerGetParam>(
@@ -83,11 +93,12 @@ async function getHandler<P extends ThalerGetParam>(
   init: RequestInit = {},
 ) {
   patchHeaders(init, 'get');
-  const request = new Request(`${id}?${toURLSearchParams(search).toString()}`, {
-    ...init,
-    method: 'GET',
+  return callback(search, {
+    request: new Request(`${id}?${toURLSearchParams(search).toString()}`, {
+      ...init,
+      method: 'GET',
+    }),
   });
-  return callback(search, request);
 }
 
 let SCOPE: unknown[] | undefined;
@@ -110,12 +121,14 @@ async function fnHandler<T, R>(
   init: RequestInit = {},
 ) {
   patchHeaders(init, 'fn');
-  const request = new Request(id, {
-    ...init,
-    method: 'POST',
-    body: await serializeFunctionBody({ scope, value }),
-  });
-  return runWithScope(scope, () => callback(value, request));
+  return runWithScope(scope, async () => callback(value, {
+    request: new Request(id, {
+      ...init,
+      method: 'POST',
+      body: await serializeFunctionBody({ scope, value }),
+    }),
+    response: createResponseInit(),
+  }));
 }
 
 async function pureHandler<T, R>(
@@ -124,13 +137,15 @@ async function pureHandler<T, R>(
   value: T,
   init: RequestInit = {},
 ) {
-  patchHeaders(init, 'fn');
-  const request = new Request(id, {
-    ...init,
-    method: 'POST',
-    body: JSON.stringify(await toJSONAsync(value)),
+  patchHeaders(init, 'pure');
+  return callback(value, {
+    request: new Request(id, {
+      ...init,
+      method: 'POST',
+      body: JSON.stringify(await toJSONAsync(value)),
+    }),
+    response: createResponseInit(),
   });
-  return callback(value, request);
 }
 
 export function $$scope(): unknown[] {
@@ -148,7 +163,7 @@ export function $$clone(
         id,
       });
     case 'post':
-      return Object.assign(actionHandler.bind(null, id, callback), {
+      return Object.assign(postHandler.bind(null, id, callback), {
         type,
         id,
       });
@@ -185,33 +200,43 @@ export async function handleRequest(request: Request): Promise<Response | undefi
         case 'post':
           return await callback(
             fromFormData(await request.formData()),
-            request,
+            { request },
           );
         case 'get':
           return await callback(
             fromURLSearchParams(url.searchParams),
-            request,
+            { request },
           );
         case 'fn': {
           const { scope, value } = fromJSON<DeserializedFunctionBody>(await request.json());
-          const result = await runWithScope(() => scope, () => callback(value, request));
+          const response = createResponseInit();
+          const result = await runWithScope(
+            () => scope,
+            () => callback(value, {
+              request,
+              response,
+            }),
+          );
           const serialized = await serializeAsync(result);
+          const headers = new Headers(response.headers);
+          headers.set('Content-Type', 'text/plain');
           return new Response(serialized, {
-            status: 200,
-            headers: {
-              'Content-Type': 'text/plain',
-            },
+            headers,
+            status: response.status,
+            statusText: response.statusText,
           });
         }
         case 'pure': {
           const value = fromJSON(await request.json());
-          const result = await callback(value, request);
+          const response = createResponseInit();
+          const result = await callback(value, { request, response });
           const serialized = await serializeAsync(result);
+          const headers = new Headers(response.headers);
+          headers.set('Content-Type', 'text/plain');
           return new Response(serialized, {
-            status: 200,
-            headers: {
-              'Content-Type': 'text/plain',
-            },
+            headers,
+            status: response.status,
+            statusText: response.statusText,
           });
         }
         default:

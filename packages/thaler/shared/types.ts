@@ -7,15 +7,24 @@ export type MaybeArray<T> = T | T[];
 export type ThalerPostParam = Record<string, MaybeArray<string | File>>;
 export type ThalerGetParam = Record<string, MaybeArray<string>>;
 
+export interface ThalerContext {
+  request: Request;
+}
+
 export type ThalerServerHandler = (request: Request) => MaybePromise<Response>;
 export type ThalerPostHandler<P extends ThalerPostParam> =
-  (formData: P, ctx: Request) => MaybePromise<Response>;
+  (formData: P, ctx: ThalerContext) => MaybePromise<Response>;
 export type ThalerGetHandler<P extends ThalerGetParam> =
-  (search: P, ctx: Request) => MaybePromise<Response>;
+  (search: P, ctx: ThalerContext) => MaybePromise<Response>;
+
+export interface ThalerFunctionalContext extends ThalerContext {
+  response: Required<ResponseInit>;
+}
+
 export type ThalerFnHandler<T, R> =
-  (value: T, ctx: Request) => MaybePromise<R>;
+  (value: T, ctx: ThalerFunctionalContext) => MaybePromise<R>;
 export type ThalerPureHandler<T, R> =
-  (value: T, ctx: Request) => MaybePromise<R>;
+  (value: T, ctx: ThalerFunctionalContext) => MaybePromise<R>;
 
 export type ThalerGenericHandler =
   | ThalerServerHandler
