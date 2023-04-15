@@ -17,8 +17,14 @@ export type ThalerPostHandler<P extends ThalerPostParam> =
 export type ThalerGetHandler<P extends ThalerGetParam> =
   (search: P, ctx: ThalerContext) => MaybePromise<Response>;
 
+export interface ThalerResponseInit {
+  headers: Headers;
+  status: number;
+  statusText: string;
+}
+
 export interface ThalerFunctionalContext extends ThalerContext {
-  response: Required<ResponseInit>;
+  response: ThalerResponseInit;
 }
 
 export type ThalerFnHandler<T, R> =

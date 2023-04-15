@@ -15,6 +15,7 @@ import {
   ThalerServerHandler,
   ThalerActionHandler,
   ThalerLoaderHandler,
+  ThalerResponseInit,
 } from '../shared/types';
 import {
   FunctionBody,
@@ -58,11 +59,11 @@ export function $$register(
   return registration;
 }
 
-function createResponseInit(): Required<ResponseInit> {
+function createResponseInit(): ThalerResponseInit {
   return {
-    headers: {
+    headers: new Headers({
       'Content-Type': 'text/plain',
-    },
+    }),
     status: 200,
     statusText: 'OK',
   };

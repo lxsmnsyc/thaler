@@ -165,6 +165,7 @@ export interface RetryOptions {
   interval?: number;
 }
 
+const DEFAULT_RETRY_COUNT = 10;
 const DEFAULT_RETRY_INTERVAL = 5000;
 const INITIAL_RETRY_INTERVAL = 10;
 
@@ -173,7 +174,7 @@ export function retry<T extends AsyncFunction>(
   options: RetryOptions,
 ): T {
   const opts = {
-    count: options.count == null ? Infinity : options.count,
+    count: options.count == null ? DEFAULT_RETRY_COUNT : options.count,
     interval: options.interval || DEFAULT_RETRY_INTERVAL,
   };
   function resolveData(
