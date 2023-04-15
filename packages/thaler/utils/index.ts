@@ -151,15 +151,9 @@ export function throttle<T extends ((...args: any[]) => Promise<any>)>(
   }) as unknown as T;
 }
 
-export interface RetryOptions<T extends any[]> {
-  key: (...args: T) => string;
+export interface RetryOptions {
   count?: number;
   interval?: number;
-}
-
-interface RetryData<R> {
-  deferred: Deferred<R>;
-  timeout?: ReturnType<typeof setTimeout>;
 }
 
 const DEFAULT_RETRY_INTERVAL = 5000;
@@ -167,40 +161,39 @@ const INITIAL_RETRY_INTERVAL = 10;
 
 export function retry<T extends ((...args: any[]) => Promise<any>)>(
   callback: T,
-  options: RetryOptions<Parameters<T>>,
+  options: RetryOptions,
 ): T {
-  const cache = new Map<string, RetryData<ReturnType<T>>>();
-
+  const opts = {
+    count: options.count == null ? Infinity : options.count,
+    interval: options.interval || DEFAULT_RETRY_INTERVAL,
+  };
   function resolveData(
-    current: RetryData<ReturnType<T>>,
-    key: string,
+    deferred: Deferred<ReturnType<T>>,
     args: Parameters<T>,
   ) {
-    function backoff(timeout: number, count: number) {
+    function backoff(time: number, count: number) {
       function handleError(reason: unknown) {
-        if (options.count != null && options.count <= count) {
-          current.deferred.reject(reason);
-          cache.delete(key);
+        if (opts.count <= count) {
+          deferred.reject(reason);
         } else {
-          current.timeout = setTimeout(() => {
+          setTimeout(() => {
             backoff(
               Math.max(
                 INITIAL_RETRY_INTERVAL,
                 Math.min(
-                  options.interval || DEFAULT_RETRY_INTERVAL,
-                  timeout * 2,
+                  opts.interval,
+                  time * 2,
                 ),
               ),
               count + 1,
             );
-          }, timeout);
+          }, time);
         }
       }
       try {
         callback.apply(callback, args).then(
           (value) => {
-            current.deferred.resolve(value as ReturnType<T>);
-            cache.delete(key);
+            deferred.resolve(value as ReturnType<T>);
           },
           handleError,
         );
@@ -212,18 +205,37 @@ export function retry<T extends ((...args: any[]) => Promise<any>)>(
   }
 
   return ((...args: Parameters<T>): ReturnType<T> => {
-    const key = options.key(...args);
-    let current = cache.get(key);
-    if (current) {
-      clearTimeout(current.timeout);
-      current.timeout = undefined;
-    } else {
-      current = {
-        deferred: createDeferred(),
-      };
+    const deferred = createDeferred<ReturnType<T>>();
+    resolveData(deferred, args);
+    return deferred.promise as ReturnType<T>;
+  }) as unknown as T;
+}
+
+export function timeout<T extends ((...args: any[]) => Promise<any>)>(
+  callback: T,
+  ms: number,
+): T {
+  return ((...args: Parameters<T>): ReturnType<T> => {
+    const deferred = createDeferred<ReturnType<T>>();
+    const timer = setTimeout(() => {
+      deferred.reject(new Error('request timeout'));
+    }, ms);
+
+    try {
+      callback.apply(callback, args).then(
+        (value) => {
+          deferred.resolve(value as ReturnType<T>);
+          clearTimeout(timer);
+        },
+        (value) => {
+          deferred.reject(value);
+          clearTimeout(timer);
+        },
+      );
+    } catch (error) {
+      deferred.reject(error);
+      clearTimeout(timer);
     }
-    cache.set(key, current);
-    resolveData(current, key, args);
-    return current.deferred.promise as ReturnType<T>;
+    return deferred.promise as ReturnType<T>;
   }) as unknown as T;
 }
