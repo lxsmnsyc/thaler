@@ -30,7 +30,6 @@ import thaler from 'unplugin-thaler';
 
 // Example: Rollup
 thaler.rollup({
-  origin: 'http://localhost:3000',
   mode: 'server', // or 'client'
   filter: {
     include: 'src/**/*.{ts,js,tsx,jsx}',

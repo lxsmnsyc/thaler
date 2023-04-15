@@ -15,7 +15,6 @@ export default defineConfig({
   vite: {
     plugins: [
       thalerPlugin.vite({
-        origin: 'http://localhost:3000',
         mode: 'server',
       }),
     ],

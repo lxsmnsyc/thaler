@@ -17,7 +17,7 @@ import {
   ThalerLoaderHandler,
 } from '../shared/types';
 import {
-  DeserializedFunctionBody,
+  FunctionBody,
   fromFormData,
   fromURLSearchParams,
   patchHeaders,
@@ -54,8 +54,7 @@ const REGISTRATIONS = new Map<string, HandlerRegistration>();
 export function $$register(
   ...registration: HandlerRegistration
 ): HandlerRegistration {
-  const url = new URL(registration[1]);
-  REGISTRATIONS.set(url.pathname, registration);
+  REGISTRATIONS.set(registration[1], registration);
   return registration;
 }
 
@@ -69,13 +68,17 @@ function createResponseInit(): Required<ResponseInit> {
   };
 }
 
+function normalizeURL(id: string) {
+  return new URL(id, 'http://localhost');
+}
+
 async function serverHandler(
   id: string,
   callback: ThalerServerHandler,
   init: RequestInit,
 ) {
   patchHeaders(init, 'server');
-  return callback(new Request(id, init));
+  return callback(new Request(normalizeURL(id), init));
 }
 
 async function postHandler<P extends ThalerPostParam>(
@@ -86,7 +89,7 @@ async function postHandler<P extends ThalerPostParam>(
 ) {
   patchHeaders(init, 'post');
   return callback(formData, {
-    request: new Request(id, {
+    request: new Request(normalizeURL(id), {
       ...init,
       method: 'POST',
       body: toFormData(formData),
@@ -111,9 +114,9 @@ async function getHandler<P extends ThalerGetParam>(
 
 let SCOPE: unknown[] | undefined;
 
-function runWithScope<T>(scope: () => unknown[], callback: () => T): T {
+function runWithScope<T>(scope: unknown[], callback: () => T): T {
   const parent = SCOPE;
-  SCOPE = scope();
+  SCOPE = scope;
   try {
     return callback();
   } finally {
@@ -129,11 +132,16 @@ async function fnHandler<T, R>(
   init: RequestInit = {},
 ) {
   patchHeaders(init, 'fn');
-  return runWithScope(scope, async () => callback(value, {
-    request: new Request(id, {
+  const currentScope = scope();
+  const body = await serializeFunctionBody({
+    scope: currentScope,
+    value,
+  });
+  return runWithScope(currentScope, () => callback(value, {
+    request: new Request(normalizeURL(id), {
       ...init,
       method: 'POST',
-      body: await serializeFunctionBody({ scope, value }),
+      body,
     }),
     response: createResponseInit(),
   }));
@@ -147,7 +155,7 @@ async function pureHandler<T, R>(
 ) {
   patchHeaders(init, 'pure');
   return callback(value, {
-    request: new Request(id, {
+    request: new Request(normalizeURL(id), {
       ...init,
       method: 'POST',
       body: JSON.stringify(await toJSONAsync(value)),
@@ -180,7 +188,7 @@ async function actionHandler<P extends ThalerPostParam, R>(
 ) {
   patchHeaders(init, 'pure');
   return callback(formData, {
-    request: new Request(id, {
+    request: new Request(normalizeURL(id), {
       ...init,
       method: 'POST',
       body: toFormData(formData),
@@ -259,10 +267,10 @@ export async function handleRequest(request: Request): Promise<Response | undefi
             { request },
           );
         case 'fn': {
-          const { scope, value } = fromJSON<DeserializedFunctionBody>(await request.json());
+          const { scope, value } = fromJSON<FunctionBody>(await request.json());
           const response = createResponseInit();
           const result = await runWithScope(
-            () => scope,
+            scope,
             () => callback(value, {
               request,
               response,

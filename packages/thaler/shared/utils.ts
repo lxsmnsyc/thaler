@@ -20,17 +20,12 @@ export function patchHeaders(init: RequestInit, type: ThalerFunctionTypes) {
 }
 
 export interface FunctionBody {
-  scope: () => unknown[];
-  value: unknown;
-}
-
-export interface DeserializedFunctionBody {
   scope: unknown[];
   value: unknown;
 }
 
-export async function serializeFunctionBody({ scope, value }: FunctionBody) {
-  return JSON.stringify(await toJSONAsync({ scope: scope(), value }));
+export async function serializeFunctionBody(body: FunctionBody) {
+  return JSON.stringify(await toJSONAsync(body));
 }
 
 export function fromFormData<T extends ThalerPostParam>(formData: FormData): T {

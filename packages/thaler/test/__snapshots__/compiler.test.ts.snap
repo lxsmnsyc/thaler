@@ -4,7 +4,7 @@ exports[`action$ > should transform 1`] = `
 "import { $$clone as _$$clone } from \\"thaler/server\\";
 import { $$register as _$$register } from \\"thaler/server\\";
 import { action$ } from 'thaler';
-const _action = _$$register(\\"action\\", \\"http://localhost:3000/example/f0b3b6fa-index-0-example\\", async ({
+const _action = _$$register(\\"action\\", \\"/example/f0b3b6fa-index-0-example\\", async ({
   greeting,
   receiver
 }) => {
@@ -18,7 +18,7 @@ exports[`action$ > should transform 2`] = `
 "import { $$clone as _$$clone } from \\"thaler/client\\";
 import { $$register as _$$register } from \\"thaler/client\\";
 import { action$ } from 'thaler';
-const _action = _$$register(\\"action\\", \\"http://localhost:3000/example/f0b3b6fa-index-0-example\\");
+const _action = _$$register(\\"action\\", \\"/example/f0b3b6fa-index-0-example\\");
 const example = _$$clone(_action);"
 `;
 
@@ -27,7 +27,7 @@ exports[`fn$ > should transform 1`] = `
 import { $$register as _$$register } from \\"thaler/server\\";
 import { fn$ } from 'thaler';
 const PREFIX = 'Message: ';
-const _fn = _$$register(\\"fn\\", \\"http://localhost:3000/example/f0b3b6fa-index-0-example\\", ({
+const _fn = _$$register(\\"fn\\", \\"/example/f0b3b6fa-index-0-example\\", ({
   greeting,
   receiver
 }) => {
@@ -42,7 +42,7 @@ exports[`fn$ > should transform 2`] = `
 import { $$register as _$$register } from \\"thaler/client\\";
 import { fn$ } from 'thaler';
 const PREFIX = 'Message: ';
-const _fn = _$$register(\\"fn\\", \\"http://localhost:3000/example/f0b3b6fa-index-0-example\\");
+const _fn = _$$register(\\"fn\\", \\"/example/f0b3b6fa-index-0-example\\");
 const example = _$$clone(_fn, () => []);"
 `;
 
@@ -51,7 +51,7 @@ exports[`fn$ > should transform with local scope 1`] = `
 import { $$scope as _$$scope } from \\"thaler/server\\";
 import { $$register as _$$register } from \\"thaler/server\\";
 import { fn$ } from 'thaler';
-const _fn = _$$register(\\"fn\\", \\"http://localhost:3000/example/f0b3b6fa-index-0-example\\", ({
+const _fn = _$$register(\\"fn\\", \\"/example/f0b3b6fa-index-0-example\\", ({
   greeting,
   receiver
 }) => {
@@ -69,7 +69,7 @@ exports[`fn$ > should transform with local scope 2`] = `
 "import { $$clone as _$$clone } from \\"thaler/client\\";
 import { $$register as _$$register } from \\"thaler/client\\";
 import { fn$ } from 'thaler';
-const _fn = _$$register(\\"fn\\", \\"http://localhost:3000/example/f0b3b6fa-index-0-example\\");
+const _fn = _$$register(\\"fn\\", \\"/example/f0b3b6fa-index-0-example\\");
 function test() {
   const PREFIX = 'Message: ';
   const example = _$$clone(_fn, () => [PREFIX]);
@@ -80,7 +80,7 @@ exports[`get$ > should transform 1`] = `
 "import { $$clone as _$$clone } from \\"thaler/server\\";
 import { $$register as _$$register } from \\"thaler/server\\";
 import { get$ } from 'thaler';
-const _get = _$$register(\\"get\\", \\"http://localhost:3000/example/f0b3b6fa-index-0-example\\", ({
+const _get = _$$register(\\"get\\", \\"/example/f0b3b6fa-index-0-example\\", ({
   greeting,
   receiver
 }) => {
@@ -99,7 +99,7 @@ exports[`get$ > should transform 2`] = `
 "import { $$clone as _$$clone } from \\"thaler/client\\";
 import { $$register as _$$register } from \\"thaler/client\\";
 import { get$ } from 'thaler';
-const _get = _$$register(\\"get\\", \\"http://localhost:3000/example/f0b3b6fa-index-0-example\\");
+const _get = _$$register(\\"get\\", \\"/example/f0b3b6fa-index-0-example\\");
 const example = _$$clone(_get);"
 `;
 
@@ -107,7 +107,7 @@ exports[`loader$ > should transform 1`] = `
 "import { $$clone as _$$clone } from \\"thaler/server\\";
 import { $$register as _$$register } from \\"thaler/server\\";
 import { loader$ } from 'thaler';
-const _loader = _$$register(\\"loader\\", \\"http://localhost:3000/example/f0b3b6fa-index-0-example\\", async ({
+const _loader = _$$register(\\"loader\\", \\"/example/f0b3b6fa-index-0-example\\", async ({
   greeting,
   receiver
 }) => {
@@ -121,7 +121,7 @@ exports[`loader$ > should transform 2`] = `
 "import { $$clone as _$$clone } from \\"thaler/client\\";
 import { $$register as _$$register } from \\"thaler/client\\";
 import { loader$ } from 'thaler';
-const _loader = _$$register(\\"loader\\", \\"http://localhost:3000/example/f0b3b6fa-index-0-example\\");
+const _loader = _$$register(\\"loader\\", \\"/example/f0b3b6fa-index-0-example\\");
 const example = _$$clone(_loader);"
 `;
 
@@ -129,7 +129,7 @@ exports[`post$ > should transform 1`] = `
 "import { $$clone as _$$clone } from \\"thaler/server\\";
 import { $$register as _$$register } from \\"thaler/server\\";
 import { post$ } from 'thaler';
-const _post = _$$register(\\"post\\", \\"http://localhost:3000/example/f0b3b6fa-index-0-example\\", ({
+const _post = _$$register(\\"post\\", \\"/example/f0b3b6fa-index-0-example\\", ({
   greeting,
   receiver
 }) => {
@@ -148,7 +148,7 @@ exports[`post$ > should transform 2`] = `
 "import { $$clone as _$$clone } from \\"thaler/client\\";
 import { $$register as _$$register } from \\"thaler/client\\";
 import { post$ } from 'thaler';
-const _post = _$$register(\\"post\\", \\"http://localhost:3000/example/f0b3b6fa-index-0-example\\");
+const _post = _$$register(\\"post\\", \\"/example/f0b3b6fa-index-0-example\\");
 const example = _$$clone(_post);"
 `;
 
@@ -159,7 +159,7 @@ import { pure$ } from 'thaler';
 const sleep = ms => new Promise(res => {
   setTimeout(res, ms, true);
 });
-const _pure = _$$register(\\"pure\\", \\"http://localhost:3000/example/f0b3b6fa-index-0-example\\", async ({
+const _pure = _$$register(\\"pure\\", \\"/example/f0b3b6fa-index-0-example\\", async ({
   greeting,
   receiver
 }) => {
@@ -177,27 +177,27 @@ import { pure$ } from 'thaler';
 const sleep = ms => new Promise(res => {
   setTimeout(res, ms, true);
 });
-const _pure = _$$register(\\"pure\\", \\"http://localhost:3000/example/f0b3b6fa-index-0-example\\");
+const _pure = _$$register(\\"pure\\", \\"/example/f0b3b6fa-index-0-example\\");
 const example = _$$clone(_pure);"
 `;
 
 exports[`ref$ > should transform 1`] = `
 "import { $$ref as _$$ref } from \\"thaler/server\\";
 import { ref$ } from 'thaler';
-const example = _$$ref(\\"http://localhost:3000/example/f0b3b6fa-index-0\\", () => 'Hello World');"
+const example = _$$ref(\\"/example/f0b3b6fa-index-0\\", () => 'Hello World');"
 `;
 
 exports[`ref$ > should transform 2`] = `
 "import { $$ref as _$$ref } from \\"thaler/client\\";
 import { ref$ } from 'thaler';
-const example = _$$ref(\\"http://localhost:3000/example/f0b3b6fa-index-0\\", () => 'Hello World');"
+const example = _$$ref(\\"/example/f0b3b6fa-index-0\\", () => 'Hello World');"
 `;
 
 exports[`server$ > should transform 1`] = `
 "import { $$clone as _$$clone } from \\"thaler/server\\";
 import { $$register as _$$register } from \\"thaler/server\\";
 import { server$ } from 'thaler';
-const _server = _$$register(\\"server\\", \\"http://localhost:3000/example/f0b3b6fa-index-0-example\\", request => {
+const _server = _$$register(\\"server\\", \\"/example/f0b3b6fa-index-0-example\\", request => {
   return new Response('Hello World', {
     headers: {
       'content-type': 'text/html'
@@ -212,6 +212,6 @@ exports[`server$ > should transform 2`] = `
 "import { $$clone as _$$clone } from \\"thaler/client\\";
 import { $$register as _$$register } from \\"thaler/client\\";
 import { server$ } from 'thaler';
-const _server = _$$register(\\"server\\", \\"http://localhost:3000/example/f0b3b6fa-index-0-example\\");
+const _server = _$$register(\\"server\\", \\"/example/f0b3b6fa-index-0-example\\");
 const example = _$$clone(_server);"
 `;

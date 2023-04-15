@@ -108,7 +108,10 @@ async function fnHandler<T, R>(
     await serverHandler('fn', id, {
       ...init,
       method: 'POST',
-      body: await serializeFunctionBody({ scope, value }),
+      body: await serializeFunctionBody({
+        scope: scope(),
+        value,
+      }),
     }),
   );
 }
