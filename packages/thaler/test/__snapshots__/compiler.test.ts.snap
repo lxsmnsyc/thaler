@@ -1,5 +1,27 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`action$ > should transform 1`] = `
+"import { $$clone as _$$clone } from \\"thaler/server\\";
+import { $$register as _$$register } from \\"thaler/server\\";
+import { action$ } from 'thaler';
+const _action = _$$register(\\"action\\", \\"/example/f0b3b6fa-index-0-example\\", async ({
+  greeting,
+  receiver
+}) => {
+  const message = greeting + ', ' + receiver + '!';
+  return message;
+});
+const example = _$$clone(_action);"
+`;
+
+exports[`action$ > should transform 2`] = `
+"import { $$clone as _$$clone } from \\"thaler/client\\";
+import { $$register as _$$register } from \\"thaler/client\\";
+import { action$ } from 'thaler';
+const _action = _$$register(\\"action\\", \\"/example/f0b3b6fa-index-0-example\\");
+const example = _$$clone(_action);"
+`;
+
 exports[`fn$ > should transform 1`] = `
 "import { $$clone as _$$clone } from \\"thaler/server\\";
 import { $$register as _$$register } from \\"thaler/server\\";
@@ -79,6 +101,28 @@ import { $$register as _$$register } from \\"thaler/client\\";
 import { get$ } from 'thaler';
 const _get = _$$register(\\"get\\", \\"/example/f0b3b6fa-index-0-example\\");
 const example = _$$clone(_get);"
+`;
+
+exports[`loader$ > should transform 1`] = `
+"import { $$clone as _$$clone } from \\"thaler/server\\";
+import { $$register as _$$register } from \\"thaler/server\\";
+import { loader$ } from 'thaler';
+const _loader = _$$register(\\"loader\\", \\"/example/f0b3b6fa-index-0-example\\", async ({
+  greeting,
+  receiver
+}) => {
+  const message = greeting + ', ' + receiver + '!';
+  return message;
+});
+const example = _$$clone(_loader);"
+`;
+
+exports[`loader$ > should transform 2`] = `
+"import { $$clone as _$$clone } from \\"thaler/client\\";
+import { $$register as _$$register } from \\"thaler/client\\";
+import { loader$ } from 'thaler';
+const _loader = _$$register(\\"loader\\", \\"/example/f0b3b6fa-index-0-example\\");
+const example = _$$clone(_loader);"
 `;
 
 exports[`post$ > should transform 1`] = `

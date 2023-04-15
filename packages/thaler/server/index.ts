@@ -13,6 +13,8 @@ import {
   ThalerGetParam,
   ThalerPureHandler,
   ThalerServerHandler,
+  ThalerActionHandler,
+  ThalerLoaderHandler,
 } from '../shared/types';
 import {
   DeserializedFunctionBody,
@@ -33,13 +35,19 @@ type FunctionHandlerRegistration<T, R> =
   [type: 'fn', id: string, callback: ThalerFnHandler<T, R>];
 type PureHandlerRegistration<T, R> =
   [type: 'pure', id: string, callback: ThalerPureHandler<T, R>];
+type LoaderHandlerRegistration<P extends ThalerGetParam, R> =
+  [type: 'loader', id: string, callback: ThalerLoaderHandler<P, R>];
+type ActionHandlerRegistration<P extends ThalerPostParam, R> =
+  [type: 'action', id: string, callback: ThalerActionHandler<P, R>];
 
 type HandlerRegistration =
   | ServerHandlerRegistration
   | GetHandlerRegistration<any>
   | PostHandlerRegistration<any>
   | FunctionHandlerRegistration<any, any>
-  | PureHandlerRegistration<any, any>;
+  | PureHandlerRegistration<any, any>
+  | LoaderHandlerRegistration<any, any>
+  | ActionHandlerRegistration<any, any>;
 
 const REGISTRATIONS = new Map<string, HandlerRegistration>();
 
@@ -148,6 +156,39 @@ async function pureHandler<T, R>(
   });
 }
 
+async function loaderHandler<P extends ThalerGetParam, R>(
+  id: string,
+  callback: ThalerLoaderHandler<P, R>,
+  search: P,
+  init: RequestInit = {},
+) {
+  patchHeaders(init, 'pure');
+  return callback(search, {
+    request: new Request(`${id}?${toURLSearchParams(search).toString()}`, {
+      ...init,
+      method: 'GET',
+    }),
+    response: createResponseInit(),
+  });
+}
+
+async function actionHandler<P extends ThalerPostParam, R>(
+  id: string,
+  callback: ThalerActionHandler<P, R>,
+  formData: P,
+  init: RequestInit = {},
+) {
+  patchHeaders(init, 'pure');
+  return callback(formData, {
+    request: new Request(id, {
+      ...init,
+      method: 'POST',
+      body: toFormData(formData),
+    }),
+    response: createResponseInit(),
+  });
+}
+
 export function $$scope(): unknown[] {
   return SCOPE!;
 }
@@ -179,6 +220,16 @@ export function $$clone(
       });
     case 'pure':
       return Object.assign(pureHandler.bind(null, id, callback), {
+        type,
+        id,
+      });
+    case 'loader':
+      return Object.assign(loaderHandler.bind(null, id, callback), {
+        type,
+        id,
+      });
+    case 'action':
+      return Object.assign(actionHandler.bind(null, id, callback), {
         type,
         id,
       });
@@ -228,6 +279,32 @@ export async function handleRequest(request: Request): Promise<Response | undefi
         }
         case 'pure': {
           const value = fromJSON(await request.json());
+          const response = createResponseInit();
+          const result = await callback(value, { request, response });
+          const serialized = await serializeAsync(result);
+          const headers = new Headers(response.headers);
+          headers.set('Content-Type', 'text/plain');
+          return new Response(serialized, {
+            headers,
+            status: response.status,
+            statusText: response.statusText,
+          });
+        }
+        case 'loader': {
+          const value = fromURLSearchParams(url.searchParams);
+          const response = createResponseInit();
+          const result = await callback(value, { request, response });
+          const serialized = await serializeAsync(result);
+          const headers = new Headers(response.headers);
+          headers.set('Content-Type', 'text/plain');
+          return new Response(serialized, {
+            headers,
+            status: response.status,
+            statusText: response.statusText,
+          });
+        }
+        case 'action': {
+          const value = fromFormData(await request.formData());
           const response = createResponseInit();
           const result = await callback(value, { request, response });
           const serialized = await serializeAsync(result);

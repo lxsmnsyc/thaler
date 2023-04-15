@@ -133,3 +133,33 @@ const example = ref$(() => 'Hello World');
     expect((await compile(FILE, code, clientOptions)).code).toMatchSnapshot();
   });
 });
+
+describe('loader$', () => {
+  it('should transform', async () => {
+    const code = `
+import { loader$ } from 'thaler';
+
+const example = loader$(async ({ greeting, receiver }) => {
+  const message = greeting + ', ' + receiver + '!';
+  return message;
+});
+  `;
+    expect((await compile(FILE, code, serverOptions)).code).toMatchSnapshot();
+    expect((await compile(FILE, code, clientOptions)).code).toMatchSnapshot();
+  });
+});
+
+describe('action$', () => {
+  it('should transform', async () => {
+    const code = `
+import { action$ } from 'thaler';
+
+const example = action$(async ({ greeting, receiver }) => {
+  const message = greeting + ', ' + receiver + '!';
+  return message;
+});
+  `;
+    expect((await compile(FILE, code, serverOptions)).code).toMatchSnapshot();
+    expect((await compile(FILE, code, clientOptions)).code).toMatchSnapshot();
+  });
+});

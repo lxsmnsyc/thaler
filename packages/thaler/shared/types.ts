@@ -25,13 +25,19 @@ export type ThalerFnHandler<T, R> =
   (value: T, ctx: ThalerFunctionalContext) => MaybePromise<R>;
 export type ThalerPureHandler<T, R> =
   (value: T, ctx: ThalerFunctionalContext) => MaybePromise<R>;
+export type ThalerLoaderHandler<P extends ThalerGetParam, R> =
+  (value: P, ctx: ThalerFunctionalContext) => MaybePromise<R>;
+export type ThalerActionHandler<P extends ThalerPostParam, R> =
+  (value: P, ctx: ThalerFunctionalContext) => MaybePromise<R>;
 
 export type ThalerGenericHandler =
   | ThalerServerHandler
   | ThalerPostHandler<any>
   | ThalerGetHandler<any>
   | ThalerFnHandler<any, any>
-  | ThalerPureHandler<any, any>;
+  | ThalerPureHandler<any, any>
+  | ThalerLoaderHandler<any, any>
+  | ThalerActionHandler<any, any>;
 
 export interface ThalerBaseFunction {
   id: string;
@@ -68,16 +74,32 @@ export interface ThalerPureFunction<T, R> extends ThalerBaseFunction {
   (value: T, init?: ThalerFunctionInit): Promise<R>;
 }
 
+export interface ThalerLoaderFunction<P extends ThalerGetParam, R>
+  extends ThalerBaseFunction {
+  type: 'loader';
+  (value: P, init?: ThalerFunctionInit): Promise<R>;
+}
+
+export interface ThalerActionFunction<P extends ThalerPostParam, R>
+  extends ThalerBaseFunction {
+  type: 'action';
+  (value: P, init?: ThalerFunctionInit): Promise<R>;
+}
+
 export type ThalerFunctions =
   | ThalerServerFunction
   | ThalerPostFunction<any>
   | ThalerGetFunction<any>
   | ThalerFunction<any, any>
-  | ThalerPureFunction<any, any>;
+  | ThalerPureFunction<any, any>
+  | ThalerLoaderFunction<any, any>
+  | ThalerActionFunction<any, any>;
 
 export type ThalerFunctionTypes =
   | 'server'
   | 'get'
   | 'post'
   | 'fn'
-  | 'pure';
+  | 'pure'
+  | 'loader'
+  | 'action';

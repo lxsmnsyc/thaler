@@ -22,13 +22,17 @@ type GetHandlerRegistration = [type: 'get', id: string];
 type PostHandlerRegistration = [type: 'post', id: string];
 type FunctionHandlerRegistration = [type: 'fn', id: string];
 type PureHandlerRegistration = [type: 'pure', id: string];
+type LoaderHandlerRegistration = [type: 'loader', id: string];
+type ActionHandlerRegistration = [type: 'action', id: string];
 
 type HandlerRegistration =
   | ServerHandlerRegistration
   | GetHandlerRegistration
   | PostHandlerRegistration
   | FunctionHandlerRegistration
-  | PureHandlerRegistration;
+  | PureHandlerRegistration
+  | LoaderHandlerRegistration
+  | ActionHandlerRegistration;
 
 interface HandlerRegistrationResult {
   type: ThalerFunctionTypes;
@@ -83,17 +87,7 @@ async function getHandler<P extends ThalerGetParam>(
   });
 }
 
-async function fnHandler<T, R>(
-  id: string,
-  scope: () => unknown[],
-  value: T,
-  init: ThalerFunctionInit = {},
-): Promise<R> {
-  const response = await serverHandler('fn', id, {
-    ...init,
-    method: 'POST',
-    body: await serializeFunctionBody({ scope, value }),
-  });
+async function deserializeResponse<R>(id: string, response: Response) {
   if (response.ok) {
     return deserialize<R>(await response.text());
   }
@@ -103,23 +97,64 @@ async function fnHandler<T, R>(
   throw new ThalerError(id);
 }
 
+async function fnHandler<T, R>(
+  id: string,
+  scope: () => unknown[],
+  value: T,
+  init: ThalerFunctionInit = {},
+): Promise<R> {
+  return deserializeResponse(
+    id,
+    await serverHandler('fn', id, {
+      ...init,
+      method: 'POST',
+      body: await serializeFunctionBody({ scope, value }),
+    }),
+  );
+}
+
 async function pureHandler<T, R>(
   id: string,
   value: T,
   init: ThalerFunctionInit = {},
 ): Promise<R> {
-  const response = await serverHandler('pure', id, {
-    ...init,
-    method: 'POST',
-    body: JSON.stringify(await toJSONAsync(value)),
-  });
-  if (response.ok) {
-    return deserialize<R>(await response.text());
-  }
-  if (import.meta.env.DEV) {
-    throw deserialize(await response.text());
-  }
-  throw new ThalerError(id);
+  return deserializeResponse(
+    id,
+    await serverHandler('pure', id, {
+      ...init,
+      method: 'POST',
+      body: JSON.stringify(await toJSONAsync(value)),
+    }),
+  );
+}
+
+async function loaderHandler<P extends ThalerGetParam, R>(
+  id: string,
+  search: P,
+  init: ThalerGetInit = {},
+): Promise<R> {
+  return deserializeResponse<R>(
+    id,
+    await serverHandler('loader', `${id}?${toURLSearchParams(search).toString()}`, {
+      ...init,
+      method: 'GET',
+    }),
+  );
+}
+
+async function actionHandler<P extends ThalerPostParam, R>(
+  id: string,
+  form: P,
+  init: ThalerPostInit = {},
+): Promise<R> {
+  return deserializeResponse<R>(
+    id,
+    await serverHandler('action', id, {
+      ...init,
+      method: 'POST',
+      body: toFormData(form),
+    }),
+  );
 }
 
 export function $$clone(
@@ -149,6 +184,16 @@ export function $$clone(
       });
     case 'pure':
       return Object.assign(pureHandler.bind(null, id), {
+        type,
+        id,
+      });
+    case 'loader':
+      return Object.assign(loaderHandler.bind(null, id), {
+        type,
+        id,
+      });
+    case 'action':
+      return Object.assign(actionHandler.bind(null, id), {
         type,
         id,
       });
