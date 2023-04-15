@@ -28,7 +28,6 @@ import thaler from 'vite-plugin-thaler';
 
 ///...
 thaler({
-  origin: 'http://localhost:3000',
   filter: {
     include: 'src/**/*.{ts,js,tsx,jsx}',
     exclude: 'node_modules/**/*.{ts,js,tsx,jsx}',

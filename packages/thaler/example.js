@@ -1,8 +1,7 @@
 import compile from 'thaler/compiler';
 
 const serverOptions = {
-  origin: 'http://localhost:3000',
-  prefix: 'example',
+  prefix: 'api/__thaler',
   mode: 'server',
 };
 
@@ -10,16 +9,11 @@ const FILE = 'src/index.ts';
 
 const code = `
 import { createResource, createSignal, Suspense } from 'solid-js';
-import { fn$, ref$ } from 'thaler';
+import { fn$ } from 'thaler';
+import { debounce } from 'thaler/utils';
 
 const sleep = (ms: number) => new Promise((res) => {
   setTimeout(res, ms, true);
-});
-
-const sleepingValue = ref$(async (value: number) => {
-  await sleep(1000);
-  console.log('Received', value);
-  return value;
 });
 
 export default function Example() {
@@ -27,11 +21,14 @@ export default function Example() {
 
   const prefix = 'Server Count';
 
-  const serverCount = fn$(async ([cb, value]: [typeof sleepingValue, number]) => (
-    \`\${prefix}: \${await cb(value)}\`
-  ));
-
-  const [data] = createResource(state, (value) => serverCount([sleepingValue, value]));
+  const serverCount = debounce(fn$(async (value: number) => {
+    await sleep(1000);
+    console.log('Received', value);
+    return \`\${prefix}: \${value}\`;
+  }), {
+    key: () => 'sleep',
+  });
+  const [data] = createResource(state, (value) => serverCount(value));
 
   function increment() {
     setState((c) => c + 1);
@@ -50,6 +47,7 @@ export default function Example() {
     </>
   );
 }
+
 
 `;
 

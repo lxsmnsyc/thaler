@@ -2,13 +2,11 @@ import { describe, expect, it } from 'vitest';
 import compile, { Options } from '../compiler';
 
 const serverOptions: Options = {
-  origin: 'http://localhost:3000',
   prefix: 'example',
   mode: 'server',
 };
 
 const clientOptions: Options = {
-  origin: 'http://localhost:3000',
   prefix: 'example',
   mode: 'client',
 };
