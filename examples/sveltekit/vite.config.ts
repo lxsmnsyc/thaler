@@ -7,6 +7,9 @@ export default defineConfig({
 		sveltekit(),
 		thalerPlugin.vite({
 			mode: 'server',
+			filter: {
+				include: 'src/**/*.{svelte,ts}'
+			},
 		}),
 	]
 });
