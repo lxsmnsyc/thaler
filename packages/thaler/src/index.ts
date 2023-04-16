@@ -12,13 +12,13 @@ import {
   ThalerPureHandler,
   ThalerServerFunction,
   ThalerServerHandler,
+  ThalerLoaderHandler,
+  ThalerLoaderFunction,
+  ThalerActionHandler,
+  ThalerActionFunction,
 } from '../shared/types';
 
-export {
-  ThalerValue,
-  ThalerPostParam,
-  ThalerGetParam,
-} from '../shared/types';
+export * from '../shared/types';
 
 export function server$(handler: ThalerServerHandler): ThalerServerFunction {
   throw new Error('server$ cannot be called during runtime.');
@@ -45,6 +45,18 @@ export function fn$<T, R>(
 export function pure$<T, R>(
   handler: ThalerPureHandler<T, R>,
 ): ThalerPureFunction<T, R> {
+  throw new Error('pure$ cannot be called during runtime.');
+}
+
+export function loader$<P extends ThalerGetParam, R>(
+  handler: ThalerLoaderHandler<P, R>,
+): ThalerLoaderFunction<P, R> {
+  throw new Error('fn$ cannot be called during runtime.');
+}
+
+export function action$<P extends ThalerPostParam, R>(
+  handler: ThalerActionHandler<P, R>,
+): ThalerActionFunction<P, R> {
   throw new Error('pure$ cannot be called during runtime.');
 }
 

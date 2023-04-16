@@ -1,5 +1,18 @@
 <script>
-  import { serverCount } from "./server-count";
+  import { fn$ } from "thaler";
+  import { debounce } from 'thaler/utils';
+
+  const prefix = 'Server Count';
+
+  const serverCount = debounce(
+    fn$(async (value) => {
+      console.log('Received', value);
+      return `${prefix}: ${value}`;
+    }),
+    {
+      key: () => 'sleep',
+    }
+  );
 
   let state = 0;
 

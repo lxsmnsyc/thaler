@@ -26,6 +26,8 @@ const TRACKED_IMPORTS: Record<string, TrackedImport> = {
   get$: { type: 'get', scoping: false },
   fn$: { type: 'fn', scoping: true },
   pure$: { type: 'pure', scoping: false },
+  loader$: { type: 'loader', scoping: false },
+  action$: { type: 'action', scoping: false },
 };
 
 const SOURCE_MODULE = 'thaler';
@@ -34,7 +36,6 @@ const SERVER_MODULE = 'thaler/server';
 
 export interface PluginOptions {
   source: string;
-  origin: string;
   prefix?: string;
   mode: 'server' | 'client';
   env?: 'development' | 'production';
@@ -273,7 +274,7 @@ function getPrefix(ctx: State) {
   } else if (ctx.filename) {
     file = ctx.filename;
   }
-  const base = `${ctx.opts.origin}/${prefix}/${xxHash32(file).toString(16)}-`;
+  const base = `/${prefix}/${xxHash32(file).toString(16)}-`;
   if (ctx.opts.env === 'production') {
     return base;
   }

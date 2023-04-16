@@ -1,7 +1,6 @@
 import compile from 'thaler/compiler';
 
 const serverOptions = {
-  origin: 'http://localhost:3000',
   prefix: 'example',
   mode: 'server',
 };

@@ -18,6 +18,7 @@ export default function Example() {
   }), {
     key: () => 'sleep',
   });
+
   const [data] = createResource(state, (value) => serverCount(value));
 
   function increment() {

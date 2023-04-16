@@ -90,7 +90,7 @@ You can also pass some request configuration (same as `server$`) as the second p
 ```js
 import { get$ } from 'thaler';
 
-const getUser = get$((search, request) => {
+const getUser = get$((search, { request }) => {
   // do stuff
 });
 
@@ -129,7 +129,7 @@ You can also pass some request configuration (same as `server$`) as the second p
 ```js
 import { post$ } from 'thaler';
 
-const addMessage = post$((formData, request) => {
+const addMessage = post$((formData, { request }) => {
   // do stuff
 });
 
@@ -163,7 +163,7 @@ You can also pass some request configuration (same as `server$`) as the second p
 ```js
 import { fn$ } from 'thaler';
 
-const addMessage = fn$((data, request) => {
+const addMessage = fn$((data, { request }) => {
   // do stuff
 });
 
@@ -174,7 +174,23 @@ await addMessage(data, {
 });
 ```
 
-#### Closure Extraction
+### `loader$` and `action$`
+
+`loader$` and `action$` is like both `get$` and `post$` in the exception that `loader$` and `action$` can return any serializable value instead of `Response`, much like `fn$` and `pure$`
+
+```js
+import { action$, loader$ } from 'thaler';
+
+const addMessage = action$(async ({ greeting, receiver }) => {
+  await db.messages.insert({ greeting, receiver });
+});
+
+const getMessage = loader$(({ id }) => (
+  db.messages.select(id)
+));
+```
+
+## Closure Extraction
 
 Other functions can capture server-side scope but unlike the other functions (including `pure$`), `fn$` has a special behavior: it can capture the client-side closure of where the function is declared on the client, serialize the captured closure and send it to the server.
 
@@ -196,6 +212,21 @@ console.log(await getMessage({ greeting: 'Hello', receiver: 'World' })); // Mess
 
 > **Warning**
 > Be careful on capturing scopes, as the captured variables must only be the values that can be serialized by `fn$`. If you're using a value that can't be serialized inside the callback that is declared outside, it cannot be captured by `fn$` and will lead to runtime errors.
+
+## Modifying `Response`
+
+`fn$`, `pure$`, `loader$` and `action$` doesn't return `Response` unlike `server$`, `get$` and `post$`, so there's no way to directly provide more `Response` information like headers.
+
+As a workaround, these functions receive a `response` object alongside `request`.
+
+```js
+import { loader$ } from 'thaler';
+
+const getMessage = loader$(({ greeting, receiver }, { response }) => {
+  response.headers.set('Cache-Control', 'max-age=86400');
+  return `"${greeting}, ${receiver}!"`;
+});
+```
 
 ## Server Handler
 
@@ -221,7 +252,11 @@ Your server runtime must have the following Web API:
 - [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob)
 - [`Headers`](https://developer.mozilla.org/en-US/docs/Web/API/Headers)
   
-If you're using bare Node runtime, you can use [`node-fetch`](https://www.npmjs.com/package/node-fetch)
+Some polyfill recommendations:
+
+- [`node-fetch`](https://www.npmjs.com/package/node-fetch)
+- [`node-fetch-native`](https://github.com/unjs/node-fetch-native)
+- [`@remix-run/web-fetch`](https://github.com/remix-run/web-std-io/tree/main/packages/fetch)
 
 ## Intercepting Client Requests
 
@@ -266,6 +301,17 @@ Creates a throttled version of the async handler. A throttled handler calls once
 Options:
 
 - `key`: Required. A function that produces a unique string based on the arguments. This is used to map the function call to its timer.
+
+### `retry(handler, options)`
+
+Retries the `handler` when it throws an error until it resolves or the max retry count has been reached (in which case it will throw the final error). `retry` utilizes an [exponential backoff](https://en.wikipedia.org/wiki/Exponential_backoff) process to gradually slow down the retry intervals.
+
+- `interval`: The maximum interval for the exponential backoff. Initial interval starts at `10` ms and doubles every retry, up to the defined maximum interval. The default maximum interval is `5000` ms.
+- `count`: The maximum number of retries. Default is `10`.
+
+### `timeout(handler, ms)`
+
+Attaches a timeout to the `handler`, that will throw if the `handler` fails to resolve before the given time.
 
 ## Integrations
 

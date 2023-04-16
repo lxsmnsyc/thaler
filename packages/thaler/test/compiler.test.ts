@@ -2,13 +2,11 @@ import { describe, expect, it } from 'vitest';
 import compile, { Options } from '../compiler';
 
 const serverOptions: Options = {
-  origin: 'http://localhost:3000',
   prefix: 'example',
   mode: 'server',
 };
 
 const clientOptions: Options = {
-  origin: 'http://localhost:3000',
   prefix: 'example',
   mode: 'client',
 };
@@ -130,6 +128,36 @@ describe('ref$', () => {
 import { ref$ } from 'thaler';
 
 const example = ref$(() => 'Hello World');
+  `;
+    expect((await compile(FILE, code, serverOptions)).code).toMatchSnapshot();
+    expect((await compile(FILE, code, clientOptions)).code).toMatchSnapshot();
+  });
+});
+
+describe('loader$', () => {
+  it('should transform', async () => {
+    const code = `
+import { loader$ } from 'thaler';
+
+const example = loader$(async ({ greeting, receiver }) => {
+  const message = greeting + ', ' + receiver + '!';
+  return message;
+});
+  `;
+    expect((await compile(FILE, code, serverOptions)).code).toMatchSnapshot();
+    expect((await compile(FILE, code, clientOptions)).code).toMatchSnapshot();
+  });
+});
+
+describe('action$', () => {
+  it('should transform', async () => {
+    const code = `
+import { action$ } from 'thaler';
+
+const example = action$(async ({ greeting, receiver }) => {
+  const message = greeting + ', ' + receiver + '!';
+  return message;
+});
   `;
     expect((await compile(FILE, code, serverOptions)).code).toMatchSnapshot();
     expect((await compile(FILE, code, clientOptions)).code).toMatchSnapshot();

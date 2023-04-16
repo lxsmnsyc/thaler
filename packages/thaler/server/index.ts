@@ -13,9 +13,12 @@ import {
   ThalerGetParam,
   ThalerPureHandler,
   ThalerServerHandler,
+  ThalerActionHandler,
+  ThalerLoaderHandler,
+  ThalerResponseInit,
 } from '../shared/types';
 import {
-  DeserializedFunctionBody,
+  FunctionBody,
   fromFormData,
   fromURLSearchParams,
   patchHeaders,
@@ -33,22 +36,41 @@ type FunctionHandlerRegistration<T, R> =
   [type: 'fn', id: string, callback: ThalerFnHandler<T, R>];
 type PureHandlerRegistration<T, R> =
   [type: 'pure', id: string, callback: ThalerPureHandler<T, R>];
+type LoaderHandlerRegistration<P extends ThalerGetParam, R> =
+  [type: 'loader', id: string, callback: ThalerLoaderHandler<P, R>];
+type ActionHandlerRegistration<P extends ThalerPostParam, R> =
+  [type: 'action', id: string, callback: ThalerActionHandler<P, R>];
 
 type HandlerRegistration =
   | ServerHandlerRegistration
   | GetHandlerRegistration<any>
   | PostHandlerRegistration<any>
   | FunctionHandlerRegistration<any, any>
-  | PureHandlerRegistration<any, any>;
+  | PureHandlerRegistration<any, any>
+  | LoaderHandlerRegistration<any, any>
+  | ActionHandlerRegistration<any, any>;
 
 const REGISTRATIONS = new Map<string, HandlerRegistration>();
 
 export function $$register(
   ...registration: HandlerRegistration
 ): HandlerRegistration {
-  const url = new URL(registration[1]);
-  REGISTRATIONS.set(url.pathname, registration);
+  REGISTRATIONS.set(registration[1], registration);
   return registration;
+}
+
+function createResponseInit(): ThalerResponseInit {
+  return {
+    headers: new Headers({
+      'Content-Type': 'text/plain',
+    }),
+    status: 200,
+    statusText: 'OK',
+  };
+}
+
+function normalizeURL(id: string) {
+  return new URL(id, 'http://localhost');
 }
 
 async function serverHandler(
@@ -57,23 +79,23 @@ async function serverHandler(
   init: RequestInit,
 ) {
   patchHeaders(init, 'server');
-  const request = new Request(id, init);
-  return callback(request);
+  return callback(new Request(normalizeURL(id), init));
 }
 
-async function actionHandler<P extends ThalerPostParam>(
+async function postHandler<P extends ThalerPostParam>(
   id: string,
   callback: ThalerPostHandler<P>,
   formData: P,
   init: RequestInit = {},
 ) {
   patchHeaders(init, 'post');
-  const request = new Request(id, {
-    ...init,
-    method: 'POST',
-    body: toFormData(formData),
+  return callback(formData, {
+    request: new Request(normalizeURL(id), {
+      ...init,
+      method: 'POST',
+      body: toFormData(formData),
+    }),
   });
-  return callback(formData, request);
 }
 
 async function getHandler<P extends ThalerGetParam>(
@@ -83,18 +105,19 @@ async function getHandler<P extends ThalerGetParam>(
   init: RequestInit = {},
 ) {
   patchHeaders(init, 'get');
-  const request = new Request(`${id}?${toURLSearchParams(search).toString()}`, {
-    ...init,
-    method: 'GET',
+  return callback(search, {
+    request: new Request(`${id}?${toURLSearchParams(search).toString()}`, {
+      ...init,
+      method: 'GET',
+    }),
   });
-  return callback(search, request);
 }
 
 let SCOPE: unknown[] | undefined;
 
-function runWithScope<T>(scope: () => unknown[], callback: () => T): T {
+function runWithScope<T>(scope: unknown[], callback: () => T): T {
   const parent = SCOPE;
-  SCOPE = scope();
+  SCOPE = scope;
   try {
     return callback();
   } finally {
@@ -110,12 +133,19 @@ async function fnHandler<T, R>(
   init: RequestInit = {},
 ) {
   patchHeaders(init, 'fn');
-  const request = new Request(id, {
-    ...init,
-    method: 'POST',
-    body: await serializeFunctionBody({ scope, value }),
+  const currentScope = scope();
+  const body = await serializeFunctionBody({
+    scope: currentScope,
+    value,
   });
-  return runWithScope(scope, () => callback(value, request));
+  return runWithScope(currentScope, () => callback(value, {
+    request: new Request(normalizeURL(id), {
+      ...init,
+      method: 'POST',
+      body,
+    }),
+    response: createResponseInit(),
+  }));
 }
 
 async function pureHandler<T, R>(
@@ -124,13 +154,48 @@ async function pureHandler<T, R>(
   value: T,
   init: RequestInit = {},
 ) {
-  patchHeaders(init, 'fn');
-  const request = new Request(id, {
-    ...init,
-    method: 'POST',
-    body: JSON.stringify(await toJSONAsync(value)),
+  patchHeaders(init, 'pure');
+  return callback(value, {
+    request: new Request(normalizeURL(id), {
+      ...init,
+      method: 'POST',
+      body: JSON.stringify(await toJSONAsync(value)),
+    }),
+    response: createResponseInit(),
   });
-  return callback(value, request);
+}
+
+async function loaderHandler<P extends ThalerGetParam, R>(
+  id: string,
+  callback: ThalerLoaderHandler<P, R>,
+  search: P,
+  init: RequestInit = {},
+) {
+  patchHeaders(init, 'pure');
+  return callback(search, {
+    request: new Request(`${id}?${toURLSearchParams(search).toString()}`, {
+      ...init,
+      method: 'GET',
+    }),
+    response: createResponseInit(),
+  });
+}
+
+async function actionHandler<P extends ThalerPostParam, R>(
+  id: string,
+  callback: ThalerActionHandler<P, R>,
+  formData: P,
+  init: RequestInit = {},
+) {
+  patchHeaders(init, 'pure');
+  return callback(formData, {
+    request: new Request(normalizeURL(id), {
+      ...init,
+      method: 'POST',
+      body: toFormData(formData),
+    }),
+    response: createResponseInit(),
+  });
 }
 
 export function $$scope(): unknown[] {
@@ -148,7 +213,7 @@ export function $$clone(
         id,
       });
     case 'post':
-      return Object.assign(actionHandler.bind(null, id, callback), {
+      return Object.assign(postHandler.bind(null, id, callback), {
         type,
         id,
       });
@@ -164,6 +229,16 @@ export function $$clone(
       });
     case 'pure':
       return Object.assign(pureHandler.bind(null, id, callback), {
+        type,
+        id,
+      });
+    case 'loader':
+      return Object.assign(loaderHandler.bind(null, id, callback), {
+        type,
+        id,
+      });
+    case 'action':
+      return Object.assign(actionHandler.bind(null, id, callback), {
         type,
         id,
       });
@@ -185,33 +260,69 @@ export async function handleRequest(request: Request): Promise<Response | undefi
         case 'post':
           return await callback(
             fromFormData(await request.formData()),
-            request,
+            { request },
           );
         case 'get':
           return await callback(
             fromURLSearchParams(url.searchParams),
-            request,
+            { request },
           );
         case 'fn': {
-          const { scope, value } = fromJSON<DeserializedFunctionBody>(await request.json());
-          const result = await runWithScope(() => scope, () => callback(value, request));
+          const { scope, value } = fromJSON<FunctionBody>(await request.json());
+          const response = createResponseInit();
+          const result = await runWithScope(
+            scope,
+            () => callback(value, {
+              request,
+              response,
+            }),
+          );
           const serialized = await serializeAsync(result);
+          const headers = new Headers(response.headers);
+          headers.set('Content-Type', 'text/plain');
           return new Response(serialized, {
-            status: 200,
-            headers: {
-              'Content-Type': 'text/plain',
-            },
+            headers,
+            status: response.status,
+            statusText: response.statusText,
           });
         }
         case 'pure': {
           const value = fromJSON(await request.json());
-          const result = await callback(value, request);
+          const response = createResponseInit();
+          const result = await callback(value, { request, response });
           const serialized = await serializeAsync(result);
+          const headers = new Headers(response.headers);
+          headers.set('Content-Type', 'text/plain');
           return new Response(serialized, {
-            status: 200,
-            headers: {
-              'Content-Type': 'text/plain',
-            },
+            headers,
+            status: response.status,
+            statusText: response.statusText,
+          });
+        }
+        case 'loader': {
+          const value = fromURLSearchParams(url.searchParams);
+          const response = createResponseInit();
+          const result = await callback(value, { request, response });
+          const serialized = await serializeAsync(result);
+          const headers = new Headers(response.headers);
+          headers.set('Content-Type', 'text/plain');
+          return new Response(serialized, {
+            headers,
+            status: response.status,
+            statusText: response.statusText,
+          });
+        }
+        case 'action': {
+          const value = fromFormData(await request.formData());
+          const response = createResponseInit();
+          const result = await callback(value, { request, response });
+          const serialized = await serializeAsync(result);
+          const headers = new Headers(response.headers);
+          headers.set('Content-Type', 'text/plain');
+          return new Response(serialized, {
+            headers,
+            status: response.status,
+            statusText: response.statusText,
           });
         }
         default:
