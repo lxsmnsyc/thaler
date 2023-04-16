@@ -61,7 +61,7 @@ export function action$<P extends ThalerPostParam, R>(
 }
 
 export function ref$<T>(value: T): T {
-  throw new Error('ref$ cannot be called during runtime');
+  throw new Error('ref$ cannot be called during runtime.');
 }
 
 export {
