@@ -171,7 +171,7 @@ async function loaderHandler<P extends ThalerGetParam, R>(
   search: P,
   init: RequestInit = {},
 ) {
-  patchHeaders(init, 'pure');
+  patchHeaders(init, 'loader');
   return callback(search, {
     request: new Request(`${id}?${toURLSearchParams(search).toString()}`, {
       ...init,
@@ -187,7 +187,7 @@ async function actionHandler<P extends ThalerPostParam, R>(
   formData: P,
   init: RequestInit = {},
 ) {
-  patchHeaders(init, 'pure');
+  patchHeaders(init, 'action');
   return callback(formData, {
     request: new Request(normalizeURL(id), {
       ...init,
