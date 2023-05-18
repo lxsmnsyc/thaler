@@ -1,5 +1,5 @@
 import { toJSONAsync } from 'seroval';
-import {
+import type {
   ThalerPostParam,
   ThalerFunctionTypes,
   ThalerGetParam,
@@ -7,7 +7,7 @@ import {
 
 export const XThalerRequestType = 'X-Thaler-Request-Type';
 
-export function patchHeaders(init: RequestInit, type: ThalerFunctionTypes) {
+export function patchHeaders(init: RequestInit, type: ThalerFunctionTypes): void {
   if (init.headers) {
     const header = new Headers(init.headers);
     header.set(XThalerRequestType, type);
@@ -24,7 +24,7 @@ export interface FunctionBody {
   value: unknown;
 }
 
-export async function serializeFunctionBody(body: FunctionBody) {
+export async function serializeFunctionBody(body: FunctionBody): Promise<string> {
   return JSON.stringify(await toJSONAsync(body));
 }
 

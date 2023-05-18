@@ -1,6 +1,6 @@
 import { createReference, deserialize, toJSONAsync } from 'seroval';
 import ThalerError from '../shared/error';
-import {
+import type {
   ThalerPostInit,
   ThalerPostParam,
   ThalerFunctionInit,
@@ -49,11 +49,15 @@ export type Interceptor = (request: Request) => MaybePromise<Request>;
 
 const INTERCEPTORS: Interceptor[] = [];
 
-export function interceptRequest(callback: Interceptor) {
+export function interceptRequest(callback: Interceptor): void {
   INTERCEPTORS.push(callback);
 }
 
-async function serverHandler(type: ThalerFunctionTypes, id: string, init: RequestInit) {
+async function serverHandler(
+  type: ThalerFunctionTypes,
+  id: string,
+  init: RequestInit,
+): Promise<Response> {
   patchHeaders(init, type);
   let root = new Request(id, init);
   for (const intercept of INTERCEPTORS) {
@@ -68,7 +72,7 @@ async function postHandler<P extends ThalerPostParam>(
   id: string,
   form: P,
   init: ThalerPostInit = {},
-) {
+): Promise<Response> {
   return serverHandler('post', id, {
     ...init,
     method: 'POST',
@@ -80,14 +84,17 @@ async function getHandler<P extends ThalerGetParam>(
   id: string,
   search: P,
   init: ThalerGetInit = {},
-) {
+): Promise<Response> {
   return serverHandler('get', `${id}?${toURLSearchParams(search).toString()}`, {
     ...init,
     method: 'GET',
   });
 }
 
-async function deserializeResponse<R>(id: string, response: Response) {
+async function deserializeResponse<R>(
+  id: string,
+  response: Response,
+): Promise<R> {
   if (response.ok) {
     return deserialize<R>(await response.text());
   }

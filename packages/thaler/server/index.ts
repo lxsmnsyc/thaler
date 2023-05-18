@@ -4,7 +4,7 @@ import {
   serializeAsync,
   toJSONAsync,
 } from 'seroval';
-import {
+import type {
   ThalerPostHandler,
   ThalerPostParam,
   ThalerFnHandler,
@@ -17,8 +17,8 @@ import {
   ThalerLoaderHandler,
   ThalerResponseInit,
 } from '../shared/types';
+import type { FunctionBody } from '../shared/utils';
 import {
-  FunctionBody,
   fromFormData,
   fromURLSearchParams,
   patchHeaders,
@@ -69,7 +69,7 @@ function createResponseInit(): ThalerResponseInit {
   };
 }
 
-function normalizeURL(id: string) {
+function normalizeURL(id: string): URL {
   return new URL(id, 'http://localhost');
 }
 
@@ -77,7 +77,7 @@ async function serverHandler(
   id: string,
   callback: ThalerServerHandler,
   init: RequestInit,
-) {
+): Promise<Response> {
   patchHeaders(init, 'server');
   return callback(new Request(normalizeURL(id), init));
 }
@@ -87,7 +87,7 @@ async function postHandler<P extends ThalerPostParam>(
   callback: ThalerPostHandler<P>,
   formData: P,
   init: RequestInit = {},
-) {
+): Promise<Response> {
   patchHeaders(init, 'post');
   return callback(formData, {
     request: new Request(normalizeURL(id), {
@@ -103,7 +103,7 @@ async function getHandler<P extends ThalerGetParam>(
   callback: ThalerGetHandler<P>,
   search: P,
   init: RequestInit = {},
-) {
+): Promise<Response> {
   patchHeaders(init, 'get');
   return callback(search, {
     request: new Request(`${id}?${toURLSearchParams(search).toString()}`, {
@@ -131,14 +131,14 @@ async function fnHandler<T, R>(
   scope: () => unknown[],
   value: T,
   init: RequestInit = {},
-) {
+): Promise<R> {
   patchHeaders(init, 'fn');
   const currentScope = scope();
   const body = await serializeFunctionBody({
     scope: currentScope,
     value,
   });
-  return runWithScope(currentScope, () => callback(value, {
+  return runWithScope(currentScope, async () => callback(value, {
     request: new Request(normalizeURL(id), {
       ...init,
       method: 'POST',
@@ -153,7 +153,7 @@ async function pureHandler<T, R>(
   callback: ThalerPureHandler<T, R>,
   value: T,
   init: RequestInit = {},
-) {
+): Promise<R> {
   patchHeaders(init, 'pure');
   return callback(value, {
     request: new Request(normalizeURL(id), {
@@ -170,7 +170,7 @@ async function loaderHandler<P extends ThalerGetParam, R>(
   callback: ThalerLoaderHandler<P, R>,
   search: P,
   init: RequestInit = {},
-) {
+): Promise<R> {
   patchHeaders(init, 'loader');
   return callback(search, {
     request: new Request(`${id}?${toURLSearchParams(search).toString()}`, {
@@ -186,7 +186,7 @@ async function actionHandler<P extends ThalerPostParam, R>(
   callback: ThalerActionHandler<P, R>,
   formData: P,
   init: RequestInit = {},
-) {
+): Promise<R> {
   patchHeaders(init, 'action');
   return callback(formData, {
     request: new Request(normalizeURL(id), {

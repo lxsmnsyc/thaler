@@ -1,4 +1,4 @@
-import { AsyncServerValue } from 'seroval';
+import type { AsyncServerValue } from 'seroval';
 
 export type ThalerValue = AsyncServerValue;
 export type MaybePromise<T> = T | Promise<T>;
