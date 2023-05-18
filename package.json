@@ -6,8 +6,8 @@
     "examples/*"
   ],
   "devDependencies": {
-    "eslint": "^8.37.0",
-    "eslint-config-lxsmnsyc": "^0.5.1",
+    "eslint": "^8.40.0",
+    "eslint-config-lxsmnsyc": "^0.6.4",
     "lerna": "^6.4.1",
     "typescript": "^4.9.5"
   }
