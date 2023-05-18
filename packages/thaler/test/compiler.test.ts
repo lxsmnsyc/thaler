@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import compile, { Options } from '../compiler';
+import type { Options } from '../compiler';
+import compile from '../compiler';
 
 const serverOptions: Options = {
   prefix: 'example',

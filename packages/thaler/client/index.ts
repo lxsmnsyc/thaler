@@ -17,32 +17,31 @@ import {
   toURLSearchParams,
 } from '../shared/utils';
 
-type ServerHandlerRegistration = [type: 'server', id: string];
-type GetHandlerRegistration = [type: 'get', id: string];
-type PostHandlerRegistration = [type: 'post', id: string];
-type FunctionHandlerRegistration = [type: 'fn', id: string];
-type PureHandlerRegistration = [type: 'pure', id: string];
-type LoaderHandlerRegistration = [type: 'loader', id: string];
-type ActionHandlerRegistration = [type: 'action', id: string];
-
-type HandlerRegistration =
-  | ServerHandlerRegistration
-  | GetHandlerRegistration
-  | PostHandlerRegistration
-  | FunctionHandlerRegistration
-  | PureHandlerRegistration
-  | LoaderHandlerRegistration
-  | ActionHandlerRegistration;
-
 interface HandlerRegistrationResult {
   type: ThalerFunctionTypes;
   id: string;
 }
 
-export function $$register(
-  ...[type, id]: HandlerRegistration
-): HandlerRegistrationResult {
-  return { type, id };
+export function $$server(id: string): HandlerRegistrationResult {
+  return { type: 'server', id };
+}
+export function $$post(id: string): HandlerRegistrationResult {
+  return { type: 'post', id };
+}
+export function $$get(id: string): HandlerRegistrationResult {
+  return { type: 'get', id };
+}
+export function $$fn(id: string): HandlerRegistrationResult {
+  return { type: 'fn', id };
+}
+export function $$pure(id: string): HandlerRegistrationResult {
+  return { type: 'pure', id };
+}
+export function $$loader(id: string): HandlerRegistrationResult {
+  return { type: 'loader', id };
+}
+export function $$action(id: string): HandlerRegistrationResult {
+  return { type: 'action', id };
 }
 
 export type Interceptor = (request: Request) => MaybePromise<Request>;

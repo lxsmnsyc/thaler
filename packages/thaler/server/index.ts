@@ -52,11 +52,58 @@ type HandlerRegistration =
 
 const REGISTRATIONS = new Map<string, HandlerRegistration>();
 
-export function $$register(
-  ...registration: HandlerRegistration
+export function $$server(id: string, callback: ThalerServerHandler): HandlerRegistration {
+  const reg: ServerHandlerRegistration = ['server', id, callback];
+  REGISTRATIONS.set(id, reg);
+  return reg;
+}
+export function $$post<P extends ThalerPostParam>(
+  id: string,
+  callback: ThalerPostHandler<P>,
 ): HandlerRegistration {
-  REGISTRATIONS.set(registration[1], registration);
-  return registration;
+  const reg: PostHandlerRegistration<P> = ['post', id, callback];
+  REGISTRATIONS.set(id, reg);
+  return reg;
+}
+export function $$get<P extends ThalerGetParam>(
+  id: string,
+  callback: ThalerGetHandler<P>,
+): HandlerRegistration {
+  const reg: GetHandlerRegistration<P> = ['get', id, callback];
+  REGISTRATIONS.set(id, reg);
+  return reg;
+}
+export function $$fn<T, R>(
+  id: string,
+  callback: ThalerFnHandler<T, R>,
+): HandlerRegistration {
+  const reg: FunctionHandlerRegistration<T, R> = ['fn', id, callback];
+  REGISTRATIONS.set(id, reg);
+  return reg;
+}
+export function $$pure<T, R>(
+  id: string,
+  callback: ThalerPureHandler<T, R>,
+): HandlerRegistration {
+  const reg: PureHandlerRegistration<T, R> = ['pure', id, callback];
+  REGISTRATIONS.set(id, reg);
+  return reg;
+}
+export function $$loader<T extends ThalerGetParam, R>(
+  id: string,
+  callback: ThalerLoaderHandler<T, R>,
+): HandlerRegistration {
+  const reg: LoaderHandlerRegistration<T, R> = ['loader', id, callback];
+  REGISTRATIONS.set(id, reg);
+  return reg;
+}
+export function $$action<T extends ThalerPostParam, R>(
+  id: string,
+  callback: ThalerActionHandler<T, R>,
+): HandlerRegistration {
+  const reg: ActionHandlerRegistration<T, R> = ['action', id, callback];
+  REGISTRATIONS.set(id, reg);
+  return reg;
 }
 
 function createResponseInit(): ThalerResponseInit {
