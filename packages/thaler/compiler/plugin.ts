@@ -181,7 +181,7 @@ function getRootStatementPath(path: babel.NodePath): babel.NodePath {
   let current = path.parentPath;
   while (current) {
     const next = current.parentPath;
-    if (t.isProgram(next)) {
+    if (next && t.isProgram(next.node)) {
       return current;
     }
     current = next;
