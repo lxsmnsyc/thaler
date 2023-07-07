@@ -1,14 +1,20 @@
 import * as babel from '@babel/core';
 import path from 'path';
-import thalerBabel, { PluginOptions } from './plugin';
+import type { PluginOptions } from './plugin';
+import thalerBabel from './plugin';
 
 export type Options = Omit<PluginOptions, 'source'>
+
+export interface CompileResult {
+  code: string;
+  map: babel.BabelFileResult['map'];
+}
 
 export default async function compile(
   id: string,
   code: string,
   options: Options,
-) {
+): Promise<CompileResult> {
   const pluginOption = [thalerBabel, {
     source: id,
     prefix: options.prefix,
