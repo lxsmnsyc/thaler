@@ -22,6 +22,35 @@ const _action$ = _$$action(\\"/example/f0b3b6fa-index-0-example\\");
 const example = _$$clone(_action$);"
 `;
 
+exports[`custom server function > should transform 1`] = `
+"import { $$clone as _$$clone } from \\"thaler/server\\";
+import { $$scope as _$$scope } from \\"thaler/server\\";
+import { $$example as _$$example } from \\"example-server-function/server\\";
+import { example$ } from 'example-server-function';
+const _example$ = _$$example(\\"/example/f0b3b6fa-index-0-example\\", () => {
+  const [greeting, receiver] = _$$scope();
+  const message = greeting + ', ' + receiver + '!';
+  return message;
+});
+function exampleProgram() {
+  const greeting = 'Hello';
+  const receiver = 'World';
+  const example = _$$clone(_example$, () => [greeting, receiver]);
+}"
+`;
+
+exports[`custom server function > should transform 2`] = `
+"import { $$clone as _$$clone } from \\"thaler/client\\";
+import { $$example as _$$example } from \\"example-server-function/client\\";
+import { example$ } from 'example-server-function';
+const _example$ = _$$example(\\"/example/f0b3b6fa-index-0-example\\");
+function exampleProgram() {
+  const greeting = 'Hello';
+  const receiver = 'World';
+  const example = _$$clone(_example$, () => [greeting, receiver]);
+}"
+`;
+
 exports[`fn$ > should transform 1`] = `
 "import { $$clone as _$$clone } from \\"thaler/server\\";
 import { $$fn as _$$fn } from \\"thaler/server\\";

@@ -19,6 +19,7 @@ export default async function compile(
     source: id,
     prefix: options.prefix,
     mode: options.mode,
+    functions: options.functions,
   }];
   const plugins: NonNullable<NonNullable<babel.TransformOptions['parserOpts']>['plugins']> = ['jsx'];
   if (/\.[mc]?tsx?$/i.test(id)) {
