@@ -277,7 +277,7 @@ interceptRequest((request) => {
 
 ## Custom Server Functions
 
-Thaler allows you to define your own server functions. It has to be provided through the `functions` config and has the following interface:
+Thaler allows you to define your own server functions. Custom server functions must call one of thaler's internally defined server functions (e.g. `$$server` from `thaler/server` and `thaler/client`) and it has to be defined through the `functions` config and has the following interface:
 
 ```js
 // This is based on the unplugin integration
