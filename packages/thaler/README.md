@@ -275,6 +275,52 @@ interceptRequest((request) => {
 
 ```
 
+## Custom Server Functions
+
+Thaler allows you to define your own server functions. It has to be provided through the `functions` config and has the following interface:
+
+```js
+// This is based on the unplugin integration
+thaler.vite({
+  functions: [
+    {
+      // Name of the function
+      name: 'server$',
+      // Boolean check if the function needs to perform
+      // closure extraction
+      scoping: false,
+      // Target identifier (to be compiled)
+      target: {
+        // Name of the identifier
+        name: 'server$',
+        // Where it is imported
+        source: 'thaler',
+        // Kind of import (named or default)
+        kind: 'named',
+      },
+      // Compiled function for the client
+      client: {
+        // Compiled function identifier
+        name: '$$server',
+        // Where it is imported
+        source: 'thaler/client',
+        // Kind of import
+        kind: 'named',
+      },
+      // Compiled function for the server
+      server: {
+        // Compiled function identifier
+        name: '$$server',
+        // Where it is imported
+        source: 'thaler/server',
+        // Kind of import
+        kind: 'named',
+      },
+    }
+  ],
+});
+```
+
 ## `thaler/utils`
 
 ### `json(data, responseInit)`
