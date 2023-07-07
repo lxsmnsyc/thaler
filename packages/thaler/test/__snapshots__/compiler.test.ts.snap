@@ -2,56 +2,85 @@
 
 exports[`action$ > should transform 1`] = `
 "import { $$clone as _$$clone } from \\"thaler/server\\";
-import { $$register as _$$register } from \\"thaler/server\\";
+import { $$action as _$$action } from \\"thaler/server\\";
 import { action$ } from 'thaler';
-const _action = _$$register(\\"action\\", \\"/example/f0b3b6fa-index-0-example\\", async ({
+const _action$ = _$$action(\\"/example/f0b3b6fa-index-0-example\\", async ({
   greeting,
   receiver
 }) => {
   const message = greeting + ', ' + receiver + '!';
   return message;
 });
-const example = _$$clone(_action);"
+const example = _$$clone(_action$);"
 `;
 
 exports[`action$ > should transform 2`] = `
 "import { $$clone as _$$clone } from \\"thaler/client\\";
-import { $$register as _$$register } from \\"thaler/client\\";
+import { $$action as _$$action } from \\"thaler/client\\";
 import { action$ } from 'thaler';
-const _action = _$$register(\\"action\\", \\"/example/f0b3b6fa-index-0-example\\");
-const example = _$$clone(_action);"
+const _action$ = _$$action(\\"/example/f0b3b6fa-index-0-example\\");
+const example = _$$clone(_action$);"
+`;
+
+exports[`custom server function > should transform 1`] = `
+"import { $$clone as _$$clone } from \\"thaler/server\\";
+import { $$scope as _$$scope } from \\"thaler/server\\";
+import { $$example as _$$example } from \\"example-server-function/server\\";
+import { example$ } from 'example-server-function';
+const _example$ = _$$example(\\"/example/f0b3b6fa-index-0-example\\", () => {
+  const [greeting, receiver] = _$$scope();
+  const message = greeting + ', ' + receiver + '!';
+  return message;
+});
+function exampleProgram() {
+  const greeting = 'Hello';
+  const receiver = 'World';
+  const example = _$$clone(_example$, () => [greeting, receiver]);
+}"
+`;
+
+exports[`custom server function > should transform 2`] = `
+"import { $$clone as _$$clone } from \\"thaler/client\\";
+import { $$example as _$$example } from \\"example-server-function/client\\";
+import { example$ } from 'example-server-function';
+const _example$ = _$$example(\\"/example/f0b3b6fa-index-0-example\\");
+function exampleProgram() {
+  const greeting = 'Hello';
+  const receiver = 'World';
+  const example = _$$clone(_example$, () => [greeting, receiver]);
+}"
 `;
 
 exports[`fn$ > should transform 1`] = `
 "import { $$clone as _$$clone } from \\"thaler/server\\";
-import { $$register as _$$register } from \\"thaler/server\\";
+import { $$fn as _$$fn } from \\"thaler/server\\";
 import { fn$ } from 'thaler';
 const PREFIX = 'Message: ';
-const _fn = _$$register(\\"fn\\", \\"/example/f0b3b6fa-index-0-example\\", ({
+const _fn$ = _$$fn(\\"/example/f0b3b6fa-index-0-example\\", ({
   greeting,
   receiver
 }) => {
   const message = PREFIX + greeting + ', ' + receiver + '!';
   return message;
 });
-const example = _$$clone(_fn, () => []);"
+const example = _$$clone(_fn$, () => []);"
 `;
 
 exports[`fn$ > should transform 2`] = `
 "import { $$clone as _$$clone } from \\"thaler/client\\";
-import { $$register as _$$register } from \\"thaler/client\\";
+import { $$fn as _$$fn } from \\"thaler/client\\";
 import { fn$ } from 'thaler';
 const PREFIX = 'Message: ';
-const _fn = _$$register(\\"fn\\", \\"/example/f0b3b6fa-index-0-example\\");
-const example = _$$clone(_fn, () => []);"
+const _fn$ = _$$fn(\\"/example/f0b3b6fa-index-0-example\\");
+const example = _$$clone(_fn$, () => []);"
 `;
 
 exports[`fn$ > should transform with local scope 1`] = `
 "import { $$clone as _$$clone } from \\"thaler/server\\";
 import { $$scope as _$$scope } from \\"thaler/server\\";
-import { $$register as _$$register } from \\"thaler/server\\";
+import { $$fn as _$$fn } from \\"thaler/server\\";
 import { fn$ } from 'thaler';
-const _fn = _$$register(\\"fn\\", \\"/example/f0b3b6fa-index-0-example\\", ({
+const _fn$ = _$$fn(\\"/example/f0b3b6fa-index-0-example\\", ({
   greeting,
   receiver
 }) => {
@@ -61,26 +90,26 @@ const _fn = _$$register(\\"fn\\", \\"/example/f0b3b6fa-index-0-example\\", ({
 });
 function test() {
   const PREFIX = 'Message: ';
-  const example = _$$clone(_fn, () => [PREFIX]);
+  const example = _$$clone(_fn$, () => [PREFIX]);
 }"
 `;
 
 exports[`fn$ > should transform with local scope 2`] = `
 "import { $$clone as _$$clone } from \\"thaler/client\\";
-import { $$register as _$$register } from \\"thaler/client\\";
+import { $$fn as _$$fn } from \\"thaler/client\\";
 import { fn$ } from 'thaler';
-const _fn = _$$register(\\"fn\\", \\"/example/f0b3b6fa-index-0-example\\");
+const _fn$ = _$$fn(\\"/example/f0b3b6fa-index-0-example\\");
 function test() {
   const PREFIX = 'Message: ';
-  const example = _$$clone(_fn, () => [PREFIX]);
+  const example = _$$clone(_fn$, () => [PREFIX]);
 }"
 `;
 
 exports[`get$ > should transform 1`] = `
 "import { $$clone as _$$clone } from \\"thaler/server\\";
-import { $$register as _$$register } from \\"thaler/server\\";
+import { $$get as _$$get } from \\"thaler/server\\";
 import { get$ } from 'thaler';
-const _get = _$$register(\\"get\\", \\"/example/f0b3b6fa-index-0-example\\", ({
+const _get$ = _$$get(\\"/example/f0b3b6fa-index-0-example\\", ({
   greeting,
   receiver
 }) => {
@@ -92,44 +121,44 @@ const _get = _$$register(\\"get\\", \\"/example/f0b3b6fa-index-0-example\\", ({
     status: 200
   });
 });
-const example = _$$clone(_get);"
+const example = _$$clone(_get$);"
 `;
 
 exports[`get$ > should transform 2`] = `
 "import { $$clone as _$$clone } from \\"thaler/client\\";
-import { $$register as _$$register } from \\"thaler/client\\";
+import { $$get as _$$get } from \\"thaler/client\\";
 import { get$ } from 'thaler';
-const _get = _$$register(\\"get\\", \\"/example/f0b3b6fa-index-0-example\\");
-const example = _$$clone(_get);"
+const _get$ = _$$get(\\"/example/f0b3b6fa-index-0-example\\");
+const example = _$$clone(_get$);"
 `;
 
 exports[`loader$ > should transform 1`] = `
 "import { $$clone as _$$clone } from \\"thaler/server\\";
-import { $$register as _$$register } from \\"thaler/server\\";
+import { $$loader as _$$loader } from \\"thaler/server\\";
 import { loader$ } from 'thaler';
-const _loader = _$$register(\\"loader\\", \\"/example/f0b3b6fa-index-0-example\\", async ({
+const _loader$ = _$$loader(\\"/example/f0b3b6fa-index-0-example\\", async ({
   greeting,
   receiver
 }) => {
   const message = greeting + ', ' + receiver + '!';
   return message;
 });
-const example = _$$clone(_loader);"
+const example = _$$clone(_loader$);"
 `;
 
 exports[`loader$ > should transform 2`] = `
 "import { $$clone as _$$clone } from \\"thaler/client\\";
-import { $$register as _$$register } from \\"thaler/client\\";
+import { $$loader as _$$loader } from \\"thaler/client\\";
 import { loader$ } from 'thaler';
-const _loader = _$$register(\\"loader\\", \\"/example/f0b3b6fa-index-0-example\\");
-const example = _$$clone(_loader);"
+const _loader$ = _$$loader(\\"/example/f0b3b6fa-index-0-example\\");
+const example = _$$clone(_loader$);"
 `;
 
 exports[`post$ > should transform 1`] = `
 "import { $$clone as _$$clone } from \\"thaler/server\\";
-import { $$register as _$$register } from \\"thaler/server\\";
+import { $$post as _$$post } from \\"thaler/server\\";
 import { post$ } from 'thaler';
-const _post = _$$register(\\"post\\", \\"/example/f0b3b6fa-index-0-example\\", ({
+const _post$ = _$$post(\\"/example/f0b3b6fa-index-0-example\\", ({
   greeting,
   receiver
 }) => {
@@ -141,25 +170,25 @@ const _post = _$$register(\\"post\\", \\"/example/f0b3b6fa-index-0-example\\", (
     status: 200
   });
 });
-const example = _$$clone(_post);"
+const example = _$$clone(_post$);"
 `;
 
 exports[`post$ > should transform 2`] = `
 "import { $$clone as _$$clone } from \\"thaler/client\\";
-import { $$register as _$$register } from \\"thaler/client\\";
+import { $$post as _$$post } from \\"thaler/client\\";
 import { post$ } from 'thaler';
-const _post = _$$register(\\"post\\", \\"/example/f0b3b6fa-index-0-example\\");
-const example = _$$clone(_post);"
+const _post$ = _$$post(\\"/example/f0b3b6fa-index-0-example\\");
+const example = _$$clone(_post$);"
 `;
 
 exports[`pure$ > should transform 1`] = `
 "import { $$clone as _$$clone } from \\"thaler/server\\";
-import { $$register as _$$register } from \\"thaler/server\\";
+import { $$pure as _$$pure } from \\"thaler/server\\";
 import { pure$ } from 'thaler';
 const sleep = ms => new Promise(res => {
   setTimeout(res, ms, true);
 });
-const _pure = _$$register(\\"pure\\", \\"/example/f0b3b6fa-index-0-example\\", async ({
+const _pure$ = _$$pure(\\"/example/f0b3b6fa-index-0-example\\", async ({
   greeting,
   receiver
 }) => {
@@ -167,18 +196,18 @@ const _pure = _$$register(\\"pure\\", \\"/example/f0b3b6fa-index-0-example\\", a
   const message = greeting + ', ' + receiver + '!';
   return message;
 });
-const example = _$$clone(_pure);"
+const example = _$$clone(_pure$);"
 `;
 
 exports[`pure$ > should transform 2`] = `
 "import { $$clone as _$$clone } from \\"thaler/client\\";
-import { $$register as _$$register } from \\"thaler/client\\";
+import { $$pure as _$$pure } from \\"thaler/client\\";
 import { pure$ } from 'thaler';
 const sleep = ms => new Promise(res => {
   setTimeout(res, ms, true);
 });
-const _pure = _$$register(\\"pure\\", \\"/example/f0b3b6fa-index-0-example\\");
-const example = _$$clone(_pure);"
+const _pure$ = _$$pure(\\"/example/f0b3b6fa-index-0-example\\");
+const example = _$$clone(_pure$);"
 `;
 
 exports[`ref$ > should transform 1`] = `
@@ -195,9 +224,9 @@ const example = _$$ref(\\"/example/f0b3b6fa-index-0\\", () => 'Hello World');"
 
 exports[`server$ > should transform 1`] = `
 "import { $$clone as _$$clone } from \\"thaler/server\\";
-import { $$register as _$$register } from \\"thaler/server\\";
+import { $$server as _$$server } from \\"thaler/server\\";
 import { server$ } from 'thaler';
-const _server = _$$register(\\"server\\", \\"/example/f0b3b6fa-index-0-example\\", request => {
+const _server$ = _$$server(\\"/example/f0b3b6fa-index-0-example\\", request => {
   return new Response('Hello World', {
     headers: {
       'content-type': 'text/html'
@@ -205,13 +234,13 @@ const _server = _$$register(\\"server\\", \\"/example/f0b3b6fa-index-0-example\\
     status: 200
   });
 });
-const example = _$$clone(_server);"
+const example = _$$clone(_server$);"
 `;
 
 exports[`server$ > should transform 2`] = `
 "import { $$clone as _$$clone } from \\"thaler/client\\";
-import { $$register as _$$register } from \\"thaler/client\\";
+import { $$server as _$$server } from \\"thaler/client\\";
 import { server$ } from 'thaler';
-const _server = _$$register(\\"server\\", \\"/example/f0b3b6fa-index-0-example\\");
-const example = _$$clone(_server);"
+const _server$ = _$$server(\\"/example/f0b3b6fa-index-0-example\\");
+const example = _$$clone(_server$);"
 `;

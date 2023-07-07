@@ -4,7 +4,7 @@ import {
   serializeAsync,
   toJSONAsync,
 } from 'seroval';
-import {
+import type {
   ThalerPostHandler,
   ThalerPostParam,
   ThalerFnHandler,
@@ -17,8 +17,8 @@ import {
   ThalerLoaderHandler,
   ThalerResponseInit,
 } from '../shared/types';
+import type { FunctionBody } from '../shared/utils';
 import {
-  FunctionBody,
   fromFormData,
   fromURLSearchParams,
   patchHeaders,
@@ -52,11 +52,58 @@ type HandlerRegistration =
 
 const REGISTRATIONS = new Map<string, HandlerRegistration>();
 
-export function $$register(
-  ...registration: HandlerRegistration
+export function $$server(id: string, callback: ThalerServerHandler): HandlerRegistration {
+  const reg: ServerHandlerRegistration = ['server', id, callback];
+  REGISTRATIONS.set(id, reg);
+  return reg;
+}
+export function $$post<P extends ThalerPostParam>(
+  id: string,
+  callback: ThalerPostHandler<P>,
 ): HandlerRegistration {
-  REGISTRATIONS.set(registration[1], registration);
-  return registration;
+  const reg: PostHandlerRegistration<P> = ['post', id, callback];
+  REGISTRATIONS.set(id, reg);
+  return reg;
+}
+export function $$get<P extends ThalerGetParam>(
+  id: string,
+  callback: ThalerGetHandler<P>,
+): HandlerRegistration {
+  const reg: GetHandlerRegistration<P> = ['get', id, callback];
+  REGISTRATIONS.set(id, reg);
+  return reg;
+}
+export function $$fn<T, R>(
+  id: string,
+  callback: ThalerFnHandler<T, R>,
+): HandlerRegistration {
+  const reg: FunctionHandlerRegistration<T, R> = ['fn', id, callback];
+  REGISTRATIONS.set(id, reg);
+  return reg;
+}
+export function $$pure<T, R>(
+  id: string,
+  callback: ThalerPureHandler<T, R>,
+): HandlerRegistration {
+  const reg: PureHandlerRegistration<T, R> = ['pure', id, callback];
+  REGISTRATIONS.set(id, reg);
+  return reg;
+}
+export function $$loader<T extends ThalerGetParam, R>(
+  id: string,
+  callback: ThalerLoaderHandler<T, R>,
+): HandlerRegistration {
+  const reg: LoaderHandlerRegistration<T, R> = ['loader', id, callback];
+  REGISTRATIONS.set(id, reg);
+  return reg;
+}
+export function $$action<T extends ThalerPostParam, R>(
+  id: string,
+  callback: ThalerActionHandler<T, R>,
+): HandlerRegistration {
+  const reg: ActionHandlerRegistration<T, R> = ['action', id, callback];
+  REGISTRATIONS.set(id, reg);
+  return reg;
 }
 
 function createResponseInit(): ThalerResponseInit {
@@ -69,7 +116,7 @@ function createResponseInit(): ThalerResponseInit {
   };
 }
 
-function normalizeURL(id: string) {
+function normalizeURL(id: string): URL {
   return new URL(id, 'http://localhost');
 }
 
@@ -77,7 +124,7 @@ async function serverHandler(
   id: string,
   callback: ThalerServerHandler,
   init: RequestInit,
-) {
+): Promise<Response> {
   patchHeaders(init, 'server');
   return callback(new Request(normalizeURL(id), init));
 }
@@ -87,7 +134,7 @@ async function postHandler<P extends ThalerPostParam>(
   callback: ThalerPostHandler<P>,
   formData: P,
   init: RequestInit = {},
-) {
+): Promise<Response> {
   patchHeaders(init, 'post');
   return callback(formData, {
     request: new Request(normalizeURL(id), {
@@ -103,7 +150,7 @@ async function getHandler<P extends ThalerGetParam>(
   callback: ThalerGetHandler<P>,
   search: P,
   init: RequestInit = {},
-) {
+): Promise<Response> {
   patchHeaders(init, 'get');
   return callback(search, {
     request: new Request(`${id}?${toURLSearchParams(search).toString()}`, {
@@ -131,14 +178,14 @@ async function fnHandler<T, R>(
   scope: () => unknown[],
   value: T,
   init: RequestInit = {},
-) {
+): Promise<R> {
   patchHeaders(init, 'fn');
   const currentScope = scope();
   const body = await serializeFunctionBody({
     scope: currentScope,
     value,
   });
-  return runWithScope(currentScope, () => callback(value, {
+  return runWithScope(currentScope, async () => callback(value, {
     request: new Request(normalizeURL(id), {
       ...init,
       method: 'POST',
@@ -153,7 +200,7 @@ async function pureHandler<T, R>(
   callback: ThalerPureHandler<T, R>,
   value: T,
   init: RequestInit = {},
-) {
+): Promise<R> {
   patchHeaders(init, 'pure');
   return callback(value, {
     request: new Request(normalizeURL(id), {
@@ -170,7 +217,7 @@ async function loaderHandler<P extends ThalerGetParam, R>(
   callback: ThalerLoaderHandler<P, R>,
   search: P,
   init: RequestInit = {},
-) {
+): Promise<R> {
   patchHeaders(init, 'loader');
   return callback(search, {
     request: new Request(`${id}?${toURLSearchParams(search).toString()}`, {
@@ -186,7 +233,7 @@ async function actionHandler<P extends ThalerPostParam, R>(
   callback: ThalerActionHandler<P, R>,
   formData: P,
   init: RequestInit = {},
-) {
+): Promise<R> {
   patchHeaders(init, 'action');
   return callback(formData, {
     request: new Request(normalizeURL(id), {

@@ -1,14 +1,39 @@
 import { describe, expect, it } from 'vitest';
-import compile, { Options } from '../compiler';
+import type { Options } from '../compiler';
+import compile from '../compiler';
+
+const functions: Options['functions'] = [
+  {
+    name: 'example$',
+    scoping: true,
+    target: {
+      name: 'example$',
+      source: 'example-server-function',
+      kind: 'named',
+    },
+    server: {
+      name: '$$example',
+      source: 'example-server-function/server',
+      kind: 'named',
+    },
+    client: {
+      name: '$$example',
+      source: 'example-server-function/client',
+      kind: 'named',
+    },
+  },
+];
 
 const serverOptions: Options = {
   prefix: 'example',
   mode: 'server',
+  functions,
 };
 
 const clientOptions: Options = {
   prefix: 'example',
   mode: 'client',
+  functions,
 };
 
 const FILE = 'src/index.ts';
@@ -158,6 +183,26 @@ const example = action$(async ({ greeting, receiver }) => {
   const message = greeting + ', ' + receiver + '!';
   return message;
 });
+  `;
+    expect((await compile(FILE, code, serverOptions)).code).toMatchSnapshot();
+    expect((await compile(FILE, code, clientOptions)).code).toMatchSnapshot();
+  });
+});
+
+describe('custom server function', () => {
+  it('should transform', async () => {
+    const code = `
+import { example$ } from 'example-server-function';
+
+function exampleProgram() {
+  const greeting = 'Hello';
+  const receiver = 'World';
+  
+  const example = example$(() => {
+    const message = greeting + ', ' + receiver + '!';
+    return message;
+  });
+}
   `;
     expect((await compile(FILE, code, serverOptions)).code).toMatchSnapshot();
     expect((await compile(FILE, code, clientOptions)).code).toMatchSnapshot();

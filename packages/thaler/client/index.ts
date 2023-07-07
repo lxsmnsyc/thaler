@@ -1,6 +1,6 @@
 import { createReference, deserialize, toJSONAsync } from 'seroval';
 import ThalerError from '../shared/error';
-import {
+import type {
   ThalerPostInit,
   ThalerPostParam,
   ThalerFunctionInit,
@@ -17,43 +17,46 @@ import {
   toURLSearchParams,
 } from '../shared/utils';
 
-type ServerHandlerRegistration = [type: 'server', id: string];
-type GetHandlerRegistration = [type: 'get', id: string];
-type PostHandlerRegistration = [type: 'post', id: string];
-type FunctionHandlerRegistration = [type: 'fn', id: string];
-type PureHandlerRegistration = [type: 'pure', id: string];
-type LoaderHandlerRegistration = [type: 'loader', id: string];
-type ActionHandlerRegistration = [type: 'action', id: string];
-
-type HandlerRegistration =
-  | ServerHandlerRegistration
-  | GetHandlerRegistration
-  | PostHandlerRegistration
-  | FunctionHandlerRegistration
-  | PureHandlerRegistration
-  | LoaderHandlerRegistration
-  | ActionHandlerRegistration;
-
 interface HandlerRegistrationResult {
   type: ThalerFunctionTypes;
   id: string;
 }
 
-export function $$register(
-  ...[type, id]: HandlerRegistration
-): HandlerRegistrationResult {
-  return { type, id };
+export function $$server(id: string): HandlerRegistrationResult {
+  return { type: 'server', id };
+}
+export function $$post(id: string): HandlerRegistrationResult {
+  return { type: 'post', id };
+}
+export function $$get(id: string): HandlerRegistrationResult {
+  return { type: 'get', id };
+}
+export function $$fn(id: string): HandlerRegistrationResult {
+  return { type: 'fn', id };
+}
+export function $$pure(id: string): HandlerRegistrationResult {
+  return { type: 'pure', id };
+}
+export function $$loader(id: string): HandlerRegistrationResult {
+  return { type: 'loader', id };
+}
+export function $$action(id: string): HandlerRegistrationResult {
+  return { type: 'action', id };
 }
 
 export type Interceptor = (request: Request) => MaybePromise<Request>;
 
 const INTERCEPTORS: Interceptor[] = [];
 
-export function interceptRequest(callback: Interceptor) {
+export function interceptRequest(callback: Interceptor): void {
   INTERCEPTORS.push(callback);
 }
 
-async function serverHandler(type: ThalerFunctionTypes, id: string, init: RequestInit) {
+async function serverHandler(
+  type: ThalerFunctionTypes,
+  id: string,
+  init: RequestInit,
+): Promise<Response> {
   patchHeaders(init, type);
   let root = new Request(id, init);
   for (const intercept of INTERCEPTORS) {
@@ -68,7 +71,7 @@ async function postHandler<P extends ThalerPostParam>(
   id: string,
   form: P,
   init: ThalerPostInit = {},
-) {
+): Promise<Response> {
   return serverHandler('post', id, {
     ...init,
     method: 'POST',
@@ -80,14 +83,17 @@ async function getHandler<P extends ThalerGetParam>(
   id: string,
   search: P,
   init: ThalerGetInit = {},
-) {
+): Promise<Response> {
   return serverHandler('get', `${id}?${toURLSearchParams(search).toString()}`, {
     ...init,
     method: 'GET',
   });
 }
 
-async function deserializeResponse<R>(id: string, response: Response) {
+async function deserializeResponse<R>(
+  id: string,
+  response: Response,
+): Promise<R> {
   if (response.ok) {
     return deserialize<R>(await response.text());
   }

@@ -1,10 +1,10 @@
 interface ImportMeta {
-  readonly env: ImportMetaEnv
+  readonly env: ImportMetaEnv;
 }
 
 interface ImportMetaEnv {
-  [key: string]: any
-  MODE: string
-  DEV: boolean
-  PROD: boolean
+  [key: string]: any;
+  MODE: string;
+  DEV: boolean;
+  PROD: boolean;
 }
