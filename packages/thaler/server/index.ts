@@ -153,7 +153,7 @@ async function getHandler<P extends ThalerGetParam>(
 ): Promise<Response> {
   patchHeaders(init, 'get');
   return callback(search, {
-    request: new Request(`${id}?${toURLSearchParams(search).toString()}`, {
+    request: new Request(normalizeURL(`${id}?${toURLSearchParams(search).toString()}`), {
       ...init,
       method: 'GET',
     }),
@@ -220,7 +220,7 @@ async function loaderHandler<P extends ThalerGetParam, R>(
 ): Promise<R> {
   patchHeaders(init, 'loader');
   return callback(search, {
-    request: new Request(`${id}?${toURLSearchParams(search).toString()}`, {
+    request: new Request(normalizeURL(`${id}?${toURLSearchParams(search).toString()}`), {
       ...init,
       method: 'GET',
     }),
