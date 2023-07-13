@@ -1,5 +1,5 @@
 {
-  "version": "0.7.0",
+  "version": "0.7.1",
   "type": "module",
   "types": "./dist/types/index.d.ts",
   "main": "./dist/cjs/production/index.cjs",
@@ -38,7 +38,7 @@
     "vite": "^4.4.1"
   },
   "dependencies": {
-    "unplugin-thaler": "0.7.0"
+    "unplugin-thaler": "0.7.1"
   },
   "peerDependencies": {
     "vite": "^3 || ^4"
