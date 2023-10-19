@@ -13,9 +13,11 @@
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "jsx": "react",
     "esModuleInterop": true,
-    "target": "es2018"
+    "target": "es2018",
+    "useDefineForClassFields": false,
+    "declarationMap": true
   }
 }
