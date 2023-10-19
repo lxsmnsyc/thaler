@@ -39,7 +39,7 @@ importers:
         specifier: ^3.3.3
         version: 3.3.3
       thaler:
-        specifier: 0.7.1
+        specifier: 0.7.2
         version: link:../../packages/thaler
     devDependencies:
       astro:
@@ -61,7 +61,7 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
       unplugin-thaler:
-        specifier: 0.7.1
+        specifier: 0.7.2
         version: link:../../packages/unplugin
 
   examples/solidstart:
@@ -79,7 +79,7 @@ importers:
         specifier: ^0.3.6
         version: 0.3.6(@solidjs/meta@0.28.6)(@solidjs/router@0.8.3)(solid-js@1.7.12)(solid-start-node@0.3.6)(vite@4.4.11)
       thaler:
-        specifier: 0.7.1
+        specifier: 0.7.2
         version: link:../../packages/thaler
       undici:
         specifier: ^5.25.4
@@ -101,7 +101,7 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
       unplugin-thaler:
-        specifier: 0.7.1
+        specifier: 0.7.2
         version: link:../../packages/unplugin
       vite:
         specifier: ^4.4.11
@@ -110,7 +110,7 @@ importers:
   examples/sveltekit:
     dependencies:
       thaler:
-        specifier: 0.7.1
+        specifier: 0.7.2
         version: link:../../packages/thaler
     devDependencies:
       '@sveltejs/adapter-auto':
@@ -141,7 +141,7 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
       unplugin-thaler:
-        specifier: 0.7.1
+        specifier: 0.7.2
         version: link:../../packages/unplugin
       vite:
         specifier: ^4.4.11
@@ -215,7 +215,7 @@ importers:
         specifier: 2.5.1
         version: 2.5.1(eslint@8.51.0)(tslib@2.6.2)(typescript@5.2.2)
       thaler:
-        specifier: 0.7.1
+        specifier: 0.7.2
         version: link:../thaler
       tslib:
         specifier: ^2.6.2
@@ -227,7 +227,7 @@ importers:
   packages/vite:
     dependencies:
       unplugin-thaler:
-        specifier: 0.7.1
+        specifier: 0.7.2
         version: link:../unplugin
     devDependencies:
       '@types/node':
