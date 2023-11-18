@@ -17,7 +17,7 @@
     "@types/babel__core": "^7.20.3",
     "@types/babel__traverse": "^7.20.3",
     "@types/node": "^20.8.7",
-    "eslint": "^8.51.0",
+    "eslint": "^8.54.0",
     "eslint-config-lxsmnsyc": "^0.6.5",
     "pridepack": "2.5.1",
     "tslib": "^2.6.2",
@@ -29,7 +29,7 @@
     "@babel/helper-module-imports": "^7.22.15",
     "@babel/traverse": "^7.23.2",
     "@babel/types": "^7.23.0",
-    "seroval": "^0.12.0"
+    "seroval": "^0.13.0"
   },
   "scripts": {
     "prepublishOnly": "pridepack clean && pridepack build",

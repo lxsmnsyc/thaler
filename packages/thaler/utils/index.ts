@@ -35,10 +35,10 @@ function createDeferred<T>(): Deferred<T> {
       resolve = res;
       reject = rej;
     }),
-    resolve(value) {
+    resolve(value): void {
       resolve(value);
     },
-    reject(value) {
+    reject(value): void {
       reject(value);
     },
   };
@@ -64,7 +64,11 @@ export function debounce<T extends AsyncFunction>(
 ): T {
   const cache = new Map<string, DebounceData<ReturnType<T>>>();
 
-  function resolveData(current: DebounceData<ReturnType<T>>, key: string, args: Parameters<T>) {
+  function resolveData(
+    current: DebounceData<ReturnType<T>>,
+    key: string,
+    args: Parameters<T>,
+  ): void {
     const instance = current.timeout;
     try {
       callback.apply(callback, args).then(
@@ -95,14 +99,18 @@ export function debounce<T extends AsyncFunction>(
     if (current) {
       clearTimeout(current.timeout);
       current.timeout = setTimeout(
-        () => resolveData(current!, key, args),
+        () => {
+          resolveData(current!, key, args);
+        },
         options.timeout || DEFAULT_DEBOUNCE_TIMEOUT,
       );
     } else {
       const record: DebounceData<ReturnType<T>> = {
         deferred: createDeferred(),
         timeout: setTimeout(
-          () => resolveData(record, key, args),
+          () => {
+            resolveData(record, key, args);
+          },
           options.timeout || DEFAULT_DEBOUNCE_TIMEOUT,
         ),
       };
@@ -127,7 +135,11 @@ export function throttle<T extends AsyncFunction>(
 ): T {
   const cache = new Map<string, ThrottleData<ReturnType<T>>>();
 
-  function resolveData(current: ThrottleData<ReturnType<T>>, key: string, args: Parameters<T>) {
+  function resolveData(
+    current: ThrottleData<ReturnType<T>>,
+    key: string,
+    args: Parameters<T>,
+  ): void {
     try {
       callback.apply(callback, args).then(
         (value) => {
@@ -180,9 +192,9 @@ export function retry<T extends AsyncFunction>(
   function resolveData(
     deferred: Deferred<ReturnType<T>>,
     args: Parameters<T>,
-  ) {
-    function backoff(time: number, count: number) {
-      function handleError(reason: unknown) {
+  ): void {
+    function backoff(time: number, count: number): void {
+      function handleError(reason: unknown): void {
         if (opts.count <= count) {
           deferred.reject(reason);
         } else {
