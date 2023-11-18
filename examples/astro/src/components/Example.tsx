@@ -1,8 +1,9 @@
 import type { JSX } from 'solid-js';
 import {
-  createResource, createSignal, onMount, Suspense, 
+  createResource, createSignal, onMount, Suspense,
 } from 'solid-js';
 import { fn$ } from 'thaler';
+import { debounce } from 'thaler/utils';
 
 const sleep = async <T, >(value: T, ms: number): Promise<T> => new Promise<T>((res) => {
   setTimeout(res, ms, value);
@@ -13,11 +14,16 @@ export default function Example(): JSX.Element {
 
   const prefix = 'Server Count';
 
-  const serverCount = fn$(async (value: number) => {
-    const delayed = await sleep(value, 1000);
-    console.log('Received', delayed);
-    return `${prefix}: ${delayed}`;
-  });
+  const serverCount = debounce(
+    fn$(async (value: number) => {
+      const delayed = await sleep(value, 1000);
+      console.log('Received', delayed);
+      return `${prefix}: ${delayed}`;
+    }),
+    {
+      key: () => 'example',
+    },
+  );
 
   const [data] = createResource(state, async (value) => serverCount(value));
 

@@ -71,8 +71,8 @@ export interface ThalerGetFunction<P extends ThalerGetParam> extends ThalerBaseF
 export type ThalerFunctionInit = Omit<RequestInit, 'method' | 'body'>;
 
 export interface ThalerFunction<T, R> extends ThalerBaseFunction {
-  type: 'fn';
   (value: T, init?: ThalerFunctionInit): Promise<R>;
+  type: 'fn';
 }
 
 export interface ThalerPureFunction<T, R> extends ThalerBaseFunction {
