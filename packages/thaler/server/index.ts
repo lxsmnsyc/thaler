@@ -129,7 +129,7 @@ function serializeToStream<T>(value: T): ReadableStream {
 function createResponseInit(): ThalerResponseInit {
   return {
     headers: new Headers({
-      'Content-Type': 'text/plain',
+      'Content-Type': 'application/json',
     }),
     status: 200,
     statusText: 'OK',
@@ -357,7 +357,7 @@ export async function handleRequest(request: Request): Promise<Response | undefi
           const response = createResponseInit();
           const result = await callback(value, { request, response });
           const headers = new Headers(response.headers);
-          headers.set('Content-Type', 'text/plain');
+          headers.set('Content-Type', 'application/json');
           return new Response(serializeToStream(result), {
             headers,
             status: response.status,
@@ -369,7 +369,7 @@ export async function handleRequest(request: Request): Promise<Response | undefi
           const response = createResponseInit();
           const result = await callback(value, { request, response });
           const headers = new Headers(response.headers);
-          headers.set('Content-Type', 'text/plain');
+          headers.set('Content-Type', 'application/json');
           return new Response(serializeToStream(result), {
             headers,
             status: response.status,
@@ -381,7 +381,7 @@ export async function handleRequest(request: Request): Promise<Response | undefi
           const response = createResponseInit();
           const result = await callback(value, { request, response });
           const headers = new Headers(response.headers);
-          headers.set('Content-Type', 'text/plain');
+          headers.set('Content-Type', 'application/json');
           return new Response(serializeToStream(result), {
             headers,
             status: response.status,
