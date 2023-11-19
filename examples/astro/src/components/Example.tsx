@@ -5,9 +5,11 @@ import {
 import { fn$ } from 'thaler';
 import { debounce } from 'thaler/utils';
 
-const sleep = async <T, >(value: T, ms: number): Promise<T> => new Promise<T>((res) => {
-  setTimeout(res, ms, value);
-});
+async function sleep<T>(value: T, ms: number): Promise<T> {
+  return new Promise<T>((res) => {
+    setTimeout(res, ms, value);
+  });
+}
 
 export default function Example(): JSX.Element {
   const [state, setState] = createSignal(0);
