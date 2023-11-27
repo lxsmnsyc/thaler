@@ -13,7 +13,7 @@
     "esbuild": "^0.19.4",
     "postcss": "^8.4.25",
     "solid-start-node": "^0.3.6",
-    "typescript": "^5.2.2",
+    "typescript": "^5.3.2",
     "unplugin-thaler": "0.7.2",
     "vite": "^4.4.11"
   },

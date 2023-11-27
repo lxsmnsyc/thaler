@@ -1,4 +1,9 @@
-import { createReference, deserialize, toJSONAsync } from 'seroval';
+import type { SerovalNode } from 'seroval';
+import {
+  createReference,
+  fromCrossJSON,
+  toJSONAsync,
+} from 'seroval';
 import ThalerError from '../shared/error';
 import type {
   ThalerPostInit,
@@ -90,15 +95,56 @@ async function getHandler<P extends ThalerGetParam>(
   });
 }
 
+async function deserializeStream<T>(response: Response): Promise<T> {
+  if (!response.body) {
+    throw new Error('missing body');
+  }
+  const reader = response.body.getReader();
+  const refs = new Map();
+
+  async function pop(): Promise<void> {
+    const result = await reader.read();
+    if (!result.done) {
+      const serialized = new TextDecoder().decode(result.value);
+      const splits = serialized.split('\n');
+      for (const split of splits) {
+        if (split !== '') {
+          const parsed = JSON.parse(split);
+          fromCrossJSON(parsed as SerovalNode, {
+            refs,
+          });
+        }
+      }
+      await pop();
+    }
+  }
+
+  const result = await reader.read();
+  if (result.done) {
+    throw new Error('Unexpected end of body');
+  }
+  const serialized = new TextDecoder().decode(result.value);
+  const parsed = JSON.parse(serialized);
+  const revived = fromCrossJSON(parsed as SerovalNode, {
+    refs,
+  });
+
+  pop().catch(() => {
+    // no-op
+  });
+
+  return revived as T;
+}
+
 async function deserializeResponse<R>(
   id: string,
   response: Response,
 ): Promise<R> {
   if (response.ok) {
-    return deserialize<R>(await response.text());
+    return deserializeStream(response);
   }
   if (import.meta.env.DEV) {
-    throw deserialize(await response.text());
+    throw deserializeStream(response);
   }
   throw new ThalerError(id);
 }

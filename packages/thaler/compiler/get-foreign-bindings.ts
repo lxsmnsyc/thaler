@@ -76,9 +76,14 @@ export default function getForeignBindings(path: babel.NodePath): t.Identifier[]
         case 'let':
         case 'var':
         case 'param':
+        case 'local':
         case 'hoisted': {
-          const blockParent = binding.path.scope.getBlockParent();
+          let blockParent = binding.path.scope.getBlockParent();
           const programParent = binding.path.scope.getProgramParent();
+
+          if (blockParent.path === binding.path) {
+            blockParent = blockParent.parent;
+          }
 
           // We don't need top-level declarations
           if (blockParent !== programParent) {

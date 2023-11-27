@@ -35,16 +35,14 @@ function createDeferred<T>(): Deferred<T> {
       resolve = res;
       reject = rej;
     }),
-    resolve(value) {
+    resolve(value): void {
       resolve(value);
     },
-    reject(value) {
+    reject(value): void {
       reject(value);
     },
   };
 }
-
-export type AsyncFunction = (...args: unknown[]) => Promise<unknown>;
 
 const DEFAULT_DEBOUNCE_TIMEOUT = 250;
 
@@ -58,13 +56,17 @@ interface DebounceData<R> {
   timeout: ReturnType<typeof setTimeout>;
 }
 
-export function debounce<T extends AsyncFunction>(
+export function debounce<T extends ((...args: any[]) => Promise<any>)>(
   callback: T,
   options: DebounceOptions<Parameters<T>>,
 ): T {
   const cache = new Map<string, DebounceData<ReturnType<T>>>();
 
-  function resolveData(current: DebounceData<ReturnType<T>>, key: string, args: Parameters<T>) {
+  function resolveData(
+    current: DebounceData<ReturnType<T>>,
+    key: string,
+    args: Parameters<T>,
+  ): void {
     const instance = current.timeout;
     try {
       callback.apply(callback, args).then(
@@ -95,14 +97,18 @@ export function debounce<T extends AsyncFunction>(
     if (current) {
       clearTimeout(current.timeout);
       current.timeout = setTimeout(
-        () => resolveData(current!, key, args),
+        () => {
+          resolveData(current!, key, args);
+        },
         options.timeout || DEFAULT_DEBOUNCE_TIMEOUT,
       );
     } else {
       const record: DebounceData<ReturnType<T>> = {
         deferred: createDeferred(),
         timeout: setTimeout(
-          () => resolveData(record, key, args),
+          () => {
+            resolveData(record, key, args);
+          },
           options.timeout || DEFAULT_DEBOUNCE_TIMEOUT,
         ),
       };
@@ -121,13 +127,17 @@ interface ThrottleData<R> {
   deferred: Deferred<R>;
 }
 
-export function throttle<T extends AsyncFunction>(
+export function throttle<T extends ((...args: any[]) => Promise<any>)>(
   callback: T,
   options: ThrottleOptions<Parameters<T>>,
 ): T {
   const cache = new Map<string, ThrottleData<ReturnType<T>>>();
 
-  function resolveData(current: ThrottleData<ReturnType<T>>, key: string, args: Parameters<T>) {
+  function resolveData(
+    current: ThrottleData<ReturnType<T>>,
+    key: string,
+    args: Parameters<T>,
+  ): void {
     try {
       callback.apply(callback, args).then(
         (value) => {
@@ -169,7 +179,7 @@ const DEFAULT_RETRY_COUNT = 10;
 const DEFAULT_RETRY_INTERVAL = 5000;
 const INITIAL_RETRY_INTERVAL = 10;
 
-export function retry<T extends AsyncFunction>(
+export function retry<T extends ((...args: any[]) => Promise<any>)>(
   callback: T,
   options: RetryOptions,
 ): T {
@@ -180,9 +190,9 @@ export function retry<T extends AsyncFunction>(
   function resolveData(
     deferred: Deferred<ReturnType<T>>,
     args: Parameters<T>,
-  ) {
-    function backoff(time: number, count: number) {
-      function handleError(reason: unknown) {
+  ): void {
+    function backoff(time: number, count: number): void {
+      function handleError(reason: unknown): void {
         if (opts.count <= count) {
           deferred.reject(reason);
         } else {
@@ -221,7 +231,7 @@ export function retry<T extends AsyncFunction>(
   }) as unknown as T;
 }
 
-export function timeout<T extends AsyncFunction>(
+export function timeout<T extends ((...args: any[]) => Promise<any>)>(
   callback: T,
   ms: number,
 ): T {

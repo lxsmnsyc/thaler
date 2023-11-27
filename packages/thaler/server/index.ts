@@ -1,7 +1,7 @@
 import {
   createReference,
   fromJSON,
-  serializeAsync,
+  toCrossJSONStream,
   toJSONAsync,
 } from 'seroval';
 import type {
@@ -106,10 +106,30 @@ export function $$action<T extends ThalerPostParam, R>(
   return reg;
 }
 
+function serializeToStream<T>(value: T): ReadableStream {
+  return new ReadableStream({
+    start(controller): void {
+      toCrossJSONStream(value, {
+        onParse(node) {
+          controller.enqueue(
+            new TextEncoder().encode(`${JSON.stringify(node)}\n`),
+          );
+        },
+        onDone() {
+          controller.close();
+        },
+        onError(error) {
+          controller.error(error);
+        },
+      });
+    },
+  });
+}
+
 function createResponseInit(): ThalerResponseInit {
   return {
     headers: new Headers({
-      'Content-Type': 'text/plain',
+      'Content-Type': 'application/json',
     }),
     status: 200,
     statusText: 'OK',
@@ -324,10 +344,9 @@ export async function handleRequest(request: Request): Promise<Response | undefi
               response,
             }),
           );
-          const serialized = await serializeAsync(result);
           const headers = new Headers(response.headers);
-          headers.set('Content-Type', 'text/plain');
-          return new Response(serialized, {
+          headers.set('Content-Type', 'application/json');
+          return new Response(serializeToStream(result), {
             headers,
             status: response.status,
             statusText: response.statusText,
@@ -337,10 +356,9 @@ export async function handleRequest(request: Request): Promise<Response | undefi
           const value = fromJSON(await request.json());
           const response = createResponseInit();
           const result = await callback(value, { request, response });
-          const serialized = await serializeAsync(result);
           const headers = new Headers(response.headers);
-          headers.set('Content-Type', 'text/plain');
-          return new Response(serialized, {
+          headers.set('Content-Type', 'application/json');
+          return new Response(serializeToStream(result), {
             headers,
             status: response.status,
             statusText: response.statusText,
@@ -350,10 +368,9 @@ export async function handleRequest(request: Request): Promise<Response | undefi
           const value = fromURLSearchParams(url.searchParams);
           const response = createResponseInit();
           const result = await callback(value, { request, response });
-          const serialized = await serializeAsync(result);
           const headers = new Headers(response.headers);
-          headers.set('Content-Type', 'text/plain');
-          return new Response(serialized, {
+          headers.set('Content-Type', 'application/json');
+          return new Response(serializeToStream(result), {
             headers,
             status: response.status,
             statusText: response.statusText,
@@ -363,10 +380,9 @@ export async function handleRequest(request: Request): Promise<Response | undefi
           const value = fromFormData(await request.formData());
           const response = createResponseInit();
           const result = await callback(value, { request, response });
-          const serialized = await serializeAsync(result);
           const headers = new Headers(response.headers);
-          headers.set('Content-Type', 'text/plain');
-          return new Response(serialized, {
+          headers.set('Content-Type', 'application/json');
+          return new Response(serializeToStream(result), {
             headers,
             status: response.status,
             statusText: response.statusText,
@@ -378,7 +394,7 @@ export async function handleRequest(request: Request): Promise<Response | undefi
     } catch (error) {
       if (import.meta.env.DEV) {
         console.error(error);
-        return new Response(await serializeAsync(error), {
+        return new Response(serializeToStream(error), {
           status: 500,
         });
       }
