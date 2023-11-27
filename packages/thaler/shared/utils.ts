@@ -6,17 +6,31 @@ import type {
 } from './types';
 
 export const XThalerRequestType = 'X-Thaler-Request-Type';
+export const XThalerInstance = 'X-Thaler-Instance';
 
-export function patchHeaders(init: RequestInit, type: ThalerFunctionTypes): void {
+let INSTANCE = 0;
+
+function getInstance(): string {
+  return `thaler:${INSTANCE++}`;
+}
+
+export function patchHeaders(
+  init: RequestInit,
+  type: ThalerFunctionTypes,
+): string {
+  const instance = getInstance();
   if (init.headers) {
     const header = new Headers(init.headers);
     header.set(XThalerRequestType, type);
+    header.set(XThalerInstance, instance);
     init.headers = header;
   } else {
     init.headers = {
       [XThalerRequestType]: type,
+      [XThalerInstance]: instance,
     };
   }
+  return instance;
 }
 
 export interface FunctionBody {

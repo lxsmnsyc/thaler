@@ -1,8 +1,8 @@
 import {
   createReference,
-  fromJSON,
-  toCrossJSONStream,
+  crossSerializeStream,
   toJSONAsync,
+  fromJSON,
 } from 'seroval';
 import type {
   ThalerPostHandler,
@@ -16,9 +16,12 @@ import type {
   ThalerActionHandler,
   ThalerLoaderHandler,
   ThalerResponseInit,
+  ThalerFunctionTypes,
 } from '../shared/types';
 import type { FunctionBody } from '../shared/utils';
 import {
+  XThalerInstance,
+  XThalerRequestType,
   fromFormData,
   fromURLSearchParams,
   patchHeaders,
@@ -105,14 +108,17 @@ export function $$action<T extends ThalerPostParam, R>(
   REGISTRATIONS.set(id, reg);
   return reg;
 }
-
-function serializeToStream<T>(value: T): ReadableStream {
+function serializeToStream<T>(instance: string, value: T): ReadableStream {
   return new ReadableStream({
     start(controller): void {
-      toCrossJSONStream(value, {
-        onParse(node) {
+      crossSerializeStream(value, {
+        scopeId: instance,
+        onSerialize(data, initial) {
+          const result = initial
+            ? `((self.$R=self.$R||{})["${instance}"]=[],${data})`
+            : data;
           controller.enqueue(
-            new TextEncoder().encode(`${JSON.stringify(node)}\n`),
+            new TextEncoder().encode(`${result};\n`),
           );
         },
         onDone() {
@@ -126,10 +132,12 @@ function serializeToStream<T>(value: T): ReadableStream {
   });
 }
 
-function createResponseInit(): ThalerResponseInit {
+function createResponseInit(type: ThalerFunctionTypes, instance: string): ThalerResponseInit {
   return {
     headers: new Headers({
       'Content-Type': 'application/json',
+      [XThalerRequestType]: type,
+      [XThalerInstance]: instance,
     }),
     status: 200,
     statusText: 'OK',
@@ -199,7 +207,7 @@ async function fnHandler<T, R>(
   value: T,
   init: RequestInit = {},
 ): Promise<R> {
-  patchHeaders(init, 'fn');
+  const instance = patchHeaders(init, 'fn');
   const currentScope = scope();
   const body = await serializeFunctionBody({
     scope: currentScope,
@@ -211,7 +219,7 @@ async function fnHandler<T, R>(
       method: 'POST',
       body,
     }),
-    response: createResponseInit(),
+    response: createResponseInit('fn', instance),
   }));
 }
 
@@ -221,14 +229,14 @@ async function pureHandler<T, R>(
   value: T,
   init: RequestInit = {},
 ): Promise<R> {
-  patchHeaders(init, 'pure');
+  const instance = patchHeaders(init, 'pure');
   return callback(value, {
     request: new Request(normalizeURL(id), {
       ...init,
       method: 'POST',
       body: JSON.stringify(await toJSONAsync(value)),
     }),
-    response: createResponseInit(),
+    response: createResponseInit('post', instance),
   });
 }
 
@@ -238,13 +246,13 @@ async function loaderHandler<P extends ThalerGetParam, R>(
   search: P,
   init: RequestInit = {},
 ): Promise<R> {
-  patchHeaders(init, 'loader');
+  const instance = patchHeaders(init, 'loader');
   return callback(search, {
     request: new Request(normalizeURL(`${id}?${toURLSearchParams(search).toString()}`), {
       ...init,
       method: 'GET',
     }),
-    response: createResponseInit(),
+    response: createResponseInit('loader', instance),
   });
 }
 
@@ -254,14 +262,14 @@ async function actionHandler<P extends ThalerPostParam, R>(
   formData: P,
   init: RequestInit = {},
 ): Promise<R> {
-  patchHeaders(init, 'action');
+  const instance = patchHeaders(init, 'action');
   return callback(formData, {
     request: new Request(normalizeURL(id), {
       ...init,
       method: 'POST',
       body: toFormData(formData),
     }),
-    response: createResponseInit(),
+    response: createResponseInit('action', instance),
   });
 }
 
@@ -317,7 +325,8 @@ export function $$clone(
 export async function handleRequest(request: Request): Promise<Response | undefined> {
   const url = new URL(request.url);
   const registration = REGISTRATIONS.get(url.pathname);
-  if (registration) {
+  const instance = request.headers.get(XThalerInstance);
+  if (registration && instance) {
     const [type, id, callback] = registration;
 
     try {
@@ -336,7 +345,7 @@ export async function handleRequest(request: Request): Promise<Response | undefi
           );
         case 'fn': {
           const { scope, value } = fromJSON<FunctionBody>(await request.json());
-          const response = createResponseInit();
+          const response = createResponseInit('fn', instance);
           const result = await runWithScope(
             scope,
             () => callback(value, {
@@ -346,7 +355,7 @@ export async function handleRequest(request: Request): Promise<Response | undefi
           );
           const headers = new Headers(response.headers);
           headers.set('Content-Type', 'application/json');
-          return new Response(serializeToStream(result), {
+          return new Response(serializeToStream(instance, result), {
             headers,
             status: response.status,
             statusText: response.statusText,
@@ -354,11 +363,11 @@ export async function handleRequest(request: Request): Promise<Response | undefi
         }
         case 'pure': {
           const value = fromJSON(await request.json());
-          const response = createResponseInit();
+          const response = createResponseInit('pure', instance);
           const result = await callback(value, { request, response });
           const headers = new Headers(response.headers);
           headers.set('Content-Type', 'application/json');
-          return new Response(serializeToStream(result), {
+          return new Response(serializeToStream(instance, result), {
             headers,
             status: response.status,
             statusText: response.statusText,
@@ -366,11 +375,11 @@ export async function handleRequest(request: Request): Promise<Response | undefi
         }
         case 'loader': {
           const value = fromURLSearchParams(url.searchParams);
-          const response = createResponseInit();
+          const response = createResponseInit('loader', instance);
           const result = await callback(value, { request, response });
           const headers = new Headers(response.headers);
-          headers.set('Content-Type', 'application/json');
-          return new Response(serializeToStream(result), {
+          headers.set('Content-Type', 'text/javascript');
+          return new Response(serializeToStream(instance, result), {
             headers,
             status: response.status,
             statusText: response.statusText,
@@ -378,11 +387,11 @@ export async function handleRequest(request: Request): Promise<Response | undefi
         }
         case 'action': {
           const value = fromFormData(await request.formData());
-          const response = createResponseInit();
+          const response = createResponseInit('action', instance);
           const result = await callback(value, { request, response });
           const headers = new Headers(response.headers);
-          headers.set('Content-Type', 'application/json');
-          return new Response(serializeToStream(result), {
+          headers.set('Content-Type', 'text/javascript');
+          return new Response(serializeToStream(instance, result), {
             headers,
             status: response.status,
             statusText: response.statusText,
@@ -394,7 +403,7 @@ export async function handleRequest(request: Request): Promise<Response | undefi
     } catch (error) {
       if (import.meta.env.DEV) {
         console.error(error);
-        return new Response(serializeToStream(error), {
+        return new Response(serializeToStream(instance, error), {
           status: 500,
         });
       }
