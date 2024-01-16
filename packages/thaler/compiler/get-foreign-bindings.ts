@@ -32,36 +32,15 @@ function isInTypescript(path: babel.NodePath): boolean {
   return false;
 }
 
-export default function getForeignBindings(path: babel.NodePath): t.Identifier[] {
+export default function getForeignBindings(
+  path: babel.NodePath,
+): t.Identifier[] {
   const identifiers = new Set<string>();
   path.traverse({
-    Expression(p) {
+    ReferencedIdentifier(p) {
       // Check identifiers that aren't in a TS expression
-      if (
-        t.isIdentifier(p.node)
-        && !isInTypescript(p)
-        && isForeignBinding(path, p, p.node.name)
-      ) {
+      if (!isInTypescript(p) && isForeignBinding(path, p, p.node.name)) {
         identifiers.add(p.node.name);
-      }
-      // for the JSX, only use JSXMemberExpression's object
-      // as a foreign binding
-      if (t.isJSXElement(p.node)) {
-        if (t.isJSXMemberExpression(p.node.openingElement.name)) {
-          let base: t.JSXMemberExpression | t.JSXIdentifier = p.node.openingElement.name;
-          while (t.isJSXMemberExpression(base)) {
-            base = base.object;
-          }
-          if (isForeignBinding(path, p, base.name)) {
-            identifiers.add(base.name);
-          }
-        }
-        if (t.isJSXIdentifier(p.node.openingElement.name)) {
-          const base = p.node.openingElement.name;
-          if (isForeignBinding(path, p, base.name)) {
-            identifiers.add(base.name);
-          }
-        }
       }
     },
   });
@@ -89,8 +68,8 @@ export default function getForeignBindings(path: babel.NodePath): t.Identifier[]
           if (blockParent !== programParent) {
             result.push(t.identifier(identifier));
           }
-        }
           break;
+        }
         default:
           break;
       }

@@ -3,27 +3,25 @@
   "version": "0.8.1",
   "private": true,
   "scripts": {
-    "dev": "solid-start dev",
-    "build": "solid-start build",
-    "start": "solid-start start"
+    "dev": "vinxi dev",
+    "build": "vinxi build",
+    "start": "vinxi start"
   },
   "type": "module",
   "devDependencies": {
-    "@types/node": "^20.8.7",
-    "esbuild": "^0.19.4",
+    "@types/node": "^20.11.3",
     "postcss": "^8.4.25",
-    "solid-start-node": "^0.3.6",
-    "typescript": "^5.3.2",
+    "typescript": "^5.3.3",
     "unplugin-thaler": "0.8.1",
     "vite": "^4.4.11"
   },
   "dependencies": {
-    "@solidjs/meta": "^0.28.6",
-    "@solidjs/router": "^0.8.3",
-    "solid-js": "^1.7.12",
-    "solid-start": "^0.3.6",
-    "thaler": "0.8.1",
-    "undici": "^5.25.4"
+    "@solidjs/start": "^0.4.9",
+    "solid-js": "^1.8.11",
+    "vinxi": "^0.1.4",
+    "@solidjs/meta": "^0.29.3",
+    "@solidjs/router": "^0.10.9",
+    "thaler": "0.8.1"
   },
   "engines": {
     "node": ">=16.8"

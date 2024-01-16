@@ -2,7 +2,7 @@ import {
   createReference,
   crossSerializeStream,
   toJSONAsync,
-  fromJSON,
+  getCrossReferenceHeader,
 } from 'seroval';
 import type {
   ThalerPostHandler,
@@ -20,8 +20,10 @@ import type {
 } from '../shared/types';
 import type { FunctionBody } from '../shared/utils';
 import {
+  XThalerID,
   XThalerInstance,
   XThalerRequestType,
+  deserializeData,
   fromFormData,
   fromURLSearchParams,
   patchHeaders,
@@ -29,20 +31,55 @@ import {
   toFormData,
   toURLSearchParams,
 } from '../shared/utils';
+import {
+  CustomEventPlugin,
+  DOMExceptionPlugin,
+  EventPlugin,
+  FormDataPlugin,
+  HeadersPlugin,
+  ReadableStreamPlugin,
+  RequestPlugin,
+  ResponsePlugin,
+  URLSearchParamsPlugin,
+  URLPlugin,
+} from 'seroval-plugins/web';
+import ThalerError from '../shared/error';
 
-type ServerHandlerRegistration = [type: 'server', id: string, callback: ThalerServerHandler];
-type GetHandlerRegistration<P extends ThalerGetParam> =
-  [type: 'get', id: string, callback: ThalerGetHandler<P>];
-type PostHandlerRegistration<P extends ThalerPostParam> =
-  [type: 'post', id: string, callback: ThalerPostHandler<P>];
-type FunctionHandlerRegistration<T, R> =
-  [type: 'fn', id: string, callback: ThalerFnHandler<T, R>];
-type PureHandlerRegistration<T, R> =
-  [type: 'pure', id: string, callback: ThalerPureHandler<T, R>];
-type LoaderHandlerRegistration<P extends ThalerGetParam, R> =
-  [type: 'loader', id: string, callback: ThalerLoaderHandler<P, R>];
-type ActionHandlerRegistration<P extends ThalerPostParam, R> =
-  [type: 'action', id: string, callback: ThalerActionHandler<P, R>];
+type ServerHandlerRegistration = [
+  type: 'server',
+  id: string,
+  callback: ThalerServerHandler,
+];
+type GetHandlerRegistration<P extends ThalerGetParam> = [
+  type: 'get',
+  id: string,
+  callback: ThalerGetHandler<P>,
+];
+type PostHandlerRegistration<P extends ThalerPostParam> = [
+  type: 'post',
+  id: string,
+  callback: ThalerPostHandler<P>,
+];
+type FunctionHandlerRegistration<T, R> = [
+  type: 'fn',
+  id: string,
+  callback: ThalerFnHandler<T, R>,
+];
+type PureHandlerRegistration<T, R> = [
+  type: 'pure',
+  id: string,
+  callback: ThalerPureHandler<T, R>,
+];
+type LoaderHandlerRegistration<P extends ThalerGetParam, R> = [
+  type: 'loader',
+  id: string,
+  callback: ThalerLoaderHandler<P, R>,
+];
+type ActionHandlerRegistration<P extends ThalerPostParam, R> = [
+  type: 'action',
+  id: string,
+  callback: ThalerActionHandler<P, R>,
+];
 
 type HandlerRegistration =
   | ServerHandlerRegistration
@@ -55,7 +92,10 @@ type HandlerRegistration =
 
 const REGISTRATIONS = new Map<string, HandlerRegistration>();
 
-export function $$server(id: string, callback: ThalerServerHandler): HandlerRegistration {
+export function $$server(
+  id: string,
+  callback: ThalerServerHandler,
+): HandlerRegistration {
   const reg: ServerHandlerRegistration = ['server', id, callback];
   REGISTRATIONS.set(id, reg);
   return reg;
@@ -108,17 +148,36 @@ export function $$action<T extends ThalerPostParam, R>(
   REGISTRATIONS.set(id, reg);
   return reg;
 }
+
+function createChunk(data: string): Uint8Array {
+  const bytes = data.length;
+  const baseHex = bytes.toString(16);
+  const totalHex = '00000000'.substring(0, 8 - baseHex.length) + baseHex; // 32-bit
+  return new TextEncoder().encode(`;0x${totalHex};${data}`);
+}
+
 function serializeToStream<T>(instance: string, value: T): ReadableStream {
   return new ReadableStream({
     start(controller): void {
       crossSerializeStream(value, {
         scopeId: instance,
+        plugins: [
+          CustomEventPlugin,
+          DOMExceptionPlugin,
+          EventPlugin,
+          FormDataPlugin,
+          HeadersPlugin,
+          ReadableStreamPlugin,
+          RequestPlugin,
+          ResponsePlugin,
+          URLSearchParamsPlugin,
+          URLPlugin,
+        ],
         onSerialize(data, initial) {
-          const result = initial
-            ? `((self.$R=self.$R||{})["${instance}"]=[],${data})`
-            : data;
           controller.enqueue(
-            new TextEncoder().encode(`${result};\n`),
+            createChunk(
+              initial ? `(${getCrossReferenceHeader(instance)},${data})` : data,
+            ),
           );
         },
         onDone() {
@@ -132,12 +191,17 @@ function serializeToStream<T>(instance: string, value: T): ReadableStream {
   });
 }
 
-function createResponseInit(type: ThalerFunctionTypes, instance: string): ThalerResponseInit {
+function createResponseInit(
+  type: ThalerFunctionTypes,
+  id: string,
+  instance: string,
+): ThalerResponseInit {
   return {
     headers: new Headers({
-      'Content-Type': 'application/json',
+      'Content-Type': 'text/javascript',
       [XThalerRequestType]: type,
       [XThalerInstance]: instance,
+      [XThalerID]: id,
     }),
     status: 200,
     statusText: 'OK',
@@ -153,8 +217,8 @@ async function serverHandler(
   callback: ThalerServerHandler,
   init: RequestInit,
 ): Promise<Response> {
-  patchHeaders(init, 'server');
-  return callback(new Request(normalizeURL(id), init));
+  patchHeaders('server', id, init);
+  return await callback(new Request(normalizeURL(id), init));
 }
 
 async function postHandler<P extends ThalerPostParam>(
@@ -163,8 +227,8 @@ async function postHandler<P extends ThalerPostParam>(
   formData: P,
   init: RequestInit = {},
 ): Promise<Response> {
-  patchHeaders(init, 'post');
-  return callback(formData, {
+  patchHeaders('post', id, init);
+  return await callback(formData, {
     request: new Request(normalizeURL(id), {
       ...init,
       method: 'POST',
@@ -179,12 +243,15 @@ async function getHandler<P extends ThalerGetParam>(
   search: P,
   init: RequestInit = {},
 ): Promise<Response> {
-  patchHeaders(init, 'get');
-  return callback(search, {
-    request: new Request(normalizeURL(`${id}?${toURLSearchParams(search).toString()}`), {
-      ...init,
-      method: 'GET',
-    }),
+  patchHeaders('get', id, init);
+  return await callback(search, {
+    request: new Request(
+      normalizeURL(`${id}?${toURLSearchParams(search).toString()}`),
+      {
+        ...init,
+        method: 'GET',
+      },
+    ),
   });
 }
 
@@ -207,20 +274,22 @@ async function fnHandler<T, R>(
   value: T,
   init: RequestInit = {},
 ): Promise<R> {
-  const instance = patchHeaders(init, 'fn');
+  const instance = patchHeaders('fn', id, init);
   const currentScope = scope();
   const body = await serializeFunctionBody({
     scope: currentScope,
     value,
   });
-  return runWithScope(currentScope, async () => callback(value, {
-    request: new Request(normalizeURL(id), {
-      ...init,
-      method: 'POST',
-      body,
+  return runWithScope(currentScope, async () =>
+    callback(value, {
+      request: new Request(normalizeURL(id), {
+        ...init,
+        method: 'POST',
+        body,
+      }),
+      response: createResponseInit('fn', id, instance),
     }),
-    response: createResponseInit('fn', instance),
-  }));
+  );
 }
 
 async function pureHandler<T, R>(
@@ -229,14 +298,14 @@ async function pureHandler<T, R>(
   value: T,
   init: RequestInit = {},
 ): Promise<R> {
-  const instance = patchHeaders(init, 'pure');
+  const instance = patchHeaders('pure', id, init);
   return callback(value, {
     request: new Request(normalizeURL(id), {
       ...init,
       method: 'POST',
       body: JSON.stringify(await toJSONAsync(value)),
     }),
-    response: createResponseInit('post', instance),
+    response: createResponseInit('post', id, instance),
   });
 }
 
@@ -246,13 +315,16 @@ async function loaderHandler<P extends ThalerGetParam, R>(
   search: P,
   init: RequestInit = {},
 ): Promise<R> {
-  const instance = patchHeaders(init, 'loader');
-  return callback(search, {
-    request: new Request(normalizeURL(`${id}?${toURLSearchParams(search).toString()}`), {
-      ...init,
-      method: 'GET',
-    }),
-    response: createResponseInit('loader', instance),
+  const instance = patchHeaders('loader', id, init);
+  return await callback(search, {
+    request: new Request(
+      normalizeURL(`${id}?${toURLSearchParams(search).toString()}`),
+      {
+        ...init,
+        method: 'GET',
+      },
+    ),
+    response: createResponseInit('loader', id, instance),
   });
 }
 
@@ -262,14 +334,14 @@ async function actionHandler<P extends ThalerPostParam, R>(
   formData: P,
   init: RequestInit = {},
 ): Promise<R> {
-  const instance = patchHeaders(init, 'action');
-  return callback(formData, {
+  const instance = patchHeaders('action', id, init);
+  return await callback(formData, {
     request: new Request(normalizeURL(id), {
       ...init,
       method: 'POST',
       body: toFormData(formData),
     }),
-    response: createResponseInit('action', instance),
+    response: createResponseInit('action', id, instance),
   });
 }
 
@@ -322,39 +394,58 @@ export function $$clone(
   }
 }
 
-export async function handleRequest(request: Request): Promise<Response | undefined> {
+export async function handleRequest(
+  request: Request,
+): Promise<Response | undefined> {
   const url = new URL(request.url);
   const registration = REGISTRATIONS.get(url.pathname);
   const instance = request.headers.get(XThalerInstance);
+  const target = request.headers.get(XThalerID);
   if (registration && instance) {
     const [type, id, callback] = registration;
+
+    if (target !== id) {
+      return new Response(
+        serializeToStream(
+          instance,
+          new Error(`Invalid request for ${instance}`),
+        ),
+        {
+          headers: new Headers({
+            'Content-Type': 'text/javascript',
+            [XThalerRequestType]: type,
+            [XThalerInstance]: instance,
+            [XThalerID]: id,
+          }),
+          status: 500,
+        },
+      );
+    }
 
     try {
       switch (type) {
         case 'server':
           return await callback(request);
         case 'post':
-          return await callback(
-            fromFormData(await request.formData()),
-            { request },
-          );
+          return await callback(fromFormData(await request.formData()), {
+            request,
+          });
         case 'get':
-          return await callback(
-            fromURLSearchParams(url.searchParams),
-            { request },
-          );
+          return await callback(fromURLSearchParams(url.searchParams), {
+            request,
+          });
         case 'fn': {
-          const { scope, value } = fromJSON<FunctionBody>(await request.json());
-          const response = createResponseInit('fn', instance);
-          const result = await runWithScope(
-            scope,
-            () => callback(value, {
+          const { scope, value } = deserializeData<FunctionBody>(
+            await request.json(),
+          );
+          const response = createResponseInit('fn', id, instance);
+          const result = await runWithScope(scope, () =>
+            callback(value, {
               request,
               response,
             }),
           );
           const headers = new Headers(response.headers);
-          headers.set('Content-Type', 'application/json');
           return new Response(serializeToStream(instance, result), {
             headers,
             status: response.status,
@@ -362,11 +453,10 @@ export async function handleRequest(request: Request): Promise<Response | undefi
           });
         }
         case 'pure': {
-          const value = fromJSON(await request.json());
-          const response = createResponseInit('pure', instance);
+          const value = deserializeData(await request.json());
+          const response = createResponseInit('pure', id, instance);
           const result = await callback(value, { request, response });
           const headers = new Headers(response.headers);
-          headers.set('Content-Type', 'application/json');
           return new Response(serializeToStream(instance, result), {
             headers,
             status: response.status,
@@ -375,10 +465,9 @@ export async function handleRequest(request: Request): Promise<Response | undefi
         }
         case 'loader': {
           const value = fromURLSearchParams(url.searchParams);
-          const response = createResponseInit('loader', instance);
+          const response = createResponseInit('loader', id, instance);
           const result = await callback(value, { request, response });
           const headers = new Headers(response.headers);
-          headers.set('Content-Type', 'text/javascript');
           return new Response(serializeToStream(instance, result), {
             headers,
             status: response.status,
@@ -387,10 +476,9 @@ export async function handleRequest(request: Request): Promise<Response | undefi
         }
         case 'action': {
           const value = fromFormData(await request.formData());
-          const response = createResponseInit('action', instance);
+          const response = createResponseInit('action', id, instance);
           const result = await callback(value, { request, response });
           const headers = new Headers(response.headers);
-          headers.set('Content-Type', 'text/javascript');
           return new Response(serializeToStream(instance, result), {
             headers,
             status: response.status,
@@ -404,10 +492,22 @@ export async function handleRequest(request: Request): Promise<Response | undefi
       if (import.meta.env.DEV) {
         console.error(error);
         return new Response(serializeToStream(instance, error), {
+          headers: new Headers({
+            'Content-Type': 'text/javascript',
+            [XThalerRequestType]: type,
+            [XThalerInstance]: instance,
+            [XThalerID]: id,
+          }),
           status: 500,
         });
       }
-      return new Response(`function "${id}" threw an unhandled server-side error.`, {
+      return new Response(serializeToStream(instance, new ThalerError(id)), {
+        headers: new Headers({
+          'Content-Type': 'text/javascript',
+          [XThalerRequestType]: type,
+          [XThalerInstance]: instance,
+          [XThalerID]: id,
+        }),
         status: 500,
       });
     }

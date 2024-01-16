@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import type {
   ThalerPostFunction,
   ThalerPostHandler,
@@ -20,47 +19,47 @@ import type {
 
 export * from '../shared/types';
 
-export function server$(handler: ThalerServerHandler): ThalerServerFunction {
+export function server$(_handler: ThalerServerHandler): ThalerServerFunction {
   throw new Error('server$ cannot be called during runtime.');
 }
 
 export function post$<P extends ThalerPostParam>(
-  handler: ThalerPostHandler<P>,
+  _handler: ThalerPostHandler<P>,
 ): ThalerPostFunction<P> {
   throw new Error('post$ cannot be called during runtime.');
 }
 
 export function get$<P extends ThalerGetParam>(
-  handler: ThalerGetHandler<P>,
+  _handler: ThalerGetHandler<P>,
 ): ThalerGetFunction<P> {
   throw new Error('get$ cannot be called during runtime.');
 }
 
 export function fn$<T, R>(
-  handler: ThalerFnHandler<T, R>,
+  _handler: ThalerFnHandler<T, R>,
 ): ThalerFunction<T, R> {
   throw new Error('fn$ cannot be called during runtime.');
 }
 
 export function pure$<T, R>(
-  handler: ThalerPureHandler<T, R>,
+  _handler: ThalerPureHandler<T, R>,
 ): ThalerPureFunction<T, R> {
   throw new Error('pure$ cannot be called during runtime.');
 }
 
 export function loader$<P extends ThalerGetParam, R>(
-  handler: ThalerLoaderHandler<P, R>,
+  _handler: ThalerLoaderHandler<P, R>,
 ): ThalerLoaderFunction<P, R> {
   throw new Error('fn$ cannot be called during runtime.');
 }
 
 export function action$<P extends ThalerPostParam, R>(
-  handler: ThalerActionHandler<P, R>,
+  _handler: ThalerActionHandler<P, R>,
 ): ThalerActionFunction<P, R> {
   throw new Error('pure$ cannot be called during runtime.');
 }
 
-export function ref$<T>(value: T): T {
+export function ref$<T>(_value: T): T {
   throw new Error('ref$ cannot be called during runtime.');
 }
 

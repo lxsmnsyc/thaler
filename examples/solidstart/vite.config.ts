@@ -1,13 +1,13 @@
-import solid from "solid-start/vite";
-import { defineConfig } from "vite";
+import { defineConfig } from '@solidjs/start/config';
 import thalerPlugin from 'unplugin-thaler';
+
+console.log(thalerPlugin);
 
 export default defineConfig({
   plugins: [
-    solid(),
-		thalerPlugin.vite({
-			prefix: 'api/__thaler',
-			mode: 'server',
-		}),
-  ]
+    thalerPlugin.vite({
+      prefix: 'api/__thaler',
+      mode: 'server',
+    }),
+  ],
 });

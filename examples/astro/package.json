@@ -9,20 +9,18 @@
     "preview": "astro preview"
   },
   "devDependencies": {
-    "astro": "^3.2.3",
+    "astro": "^4.1.2",
     "autoprefixer": "^10.4.16",
-    "eslint": "^8.54.0",
-    "eslint-config-lxsmnsyc": "^0.6.5",
-    "postcss": "^8.4.31",
-    "typescript": "^5.3.2",
+    "postcss": "^8.4.33",
+    "typescript": "^5.3.3",
     "unplugin-thaler": "0.8.1"
   },
   "dependencies": {
-    "@astrojs/node": "^6.0.3",
-    "@astrojs/solid-js": "^3.0.2",
-    "@astrojs/tailwind": "^5.0.1",
-    "solid-js": "^1.7.12",
-    "tailwindcss": "^3.3.3",
+    "@astrojs/node": "^7.0.4",
+    "@astrojs/solid-js": "^4.0.1",
+    "@astrojs/tailwind": "^5.1.0",
+    "solid-js": "^1.8.11",
+    "tailwindcss": "^3.4.1",
     "thaler": "0.8.1"
   }
 }
