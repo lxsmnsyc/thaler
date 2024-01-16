@@ -1,4 +1,16 @@
-import { toJSONAsync } from 'seroval';
+import { fromJSON, toJSONAsync } from 'seroval';
+import {
+  CustomEventPlugin,
+  DOMExceptionPlugin,
+  EventPlugin,
+  FormDataPlugin,
+  HeadersPlugin,
+  ReadableStreamPlugin,
+  RequestPlugin,
+  ResponsePlugin,
+  URLSearchParamsPlugin,
+  URLPlugin,
+} from 'seroval-plugins/web';
 import type {
   ThalerPostParam,
   ThalerFunctionTypes,
@@ -7,6 +19,7 @@ import type {
 
 export const XThalerRequestType = 'X-Thaler-Request-Type';
 export const XThalerInstance = 'X-Thaler-Instance';
+export const XThalerID = 'X-Thaler-ID';
 
 let INSTANCE = 0;
 
@@ -15,19 +28,22 @@ function getInstance(): string {
 }
 
 export function patchHeaders(
-  init: RequestInit,
   type: ThalerFunctionTypes,
+  id: string,
+  init: RequestInit,
 ): string {
   const instance = getInstance();
   if (init.headers) {
     const header = new Headers(init.headers);
     header.set(XThalerRequestType, type);
     header.set(XThalerInstance, instance);
+    header.set(XThalerID, id);
     init.headers = header;
   } else {
     init.headers = {
       [XThalerRequestType]: type,
       [XThalerInstance]: instance,
+      [XThalerID]: id,
     };
   }
   return instance;
@@ -38,8 +54,42 @@ export interface FunctionBody {
   value: unknown;
 }
 
-export async function serializeFunctionBody(body: FunctionBody): Promise<string> {
-  return JSON.stringify(await toJSONAsync(body));
+export async function serializeFunctionBody(
+  body: FunctionBody,
+): Promise<string> {
+  return JSON.stringify(
+    await toJSONAsync(body, {
+      plugins: [
+        CustomEventPlugin,
+        DOMExceptionPlugin,
+        EventPlugin,
+        FormDataPlugin,
+        HeadersPlugin,
+        ReadableStreamPlugin,
+        RequestPlugin,
+        ResponsePlugin,
+        URLSearchParamsPlugin,
+        URLPlugin,
+      ],
+    }),
+  );
+}
+
+export function deserializeData<T>(data: any): T {
+  return fromJSON(data, {
+    plugins: [
+      CustomEventPlugin,
+      DOMExceptionPlugin,
+      EventPlugin,
+      FormDataPlugin,
+      HeadersPlugin,
+      ReadableStreamPlugin,
+      RequestPlugin,
+      ResponsePlugin,
+      URLSearchParamsPlugin,
+      URLPlugin,
+    ],
+  }) as T;
 }
 
 export function fromFormData<T extends ThalerPostParam>(formData: FormData): T {
@@ -79,7 +129,9 @@ export function toFormData<T extends ThalerPostParam>(source: T): FormData {
   return formData;
 }
 
-export function fromURLSearchParams<T extends ThalerGetParam>(search: URLSearchParams): T {
+export function fromURLSearchParams<T extends ThalerGetParam>(
+  search: URLSearchParams,
+): T {
   const source: ThalerGetParam = {};
   for (const [key, value] of search.entries()) {
     if (key in source) {
@@ -96,7 +148,9 @@ export function fromURLSearchParams<T extends ThalerGetParam>(search: URLSearchP
   return source as T;
 }
 
-export function toURLSearchParams<T extends ThalerGetParam>(source: T): URLSearchParams {
+export function toURLSearchParams<T extends ThalerGetParam>(
+  source: T,
+): URLSearchParams {
   const search = new URLSearchParams();
   for (const [key, value] of Object.entries(source)) {
     if (Array.isArray(value)) {

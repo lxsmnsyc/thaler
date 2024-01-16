@@ -1,12 +1,10 @@
 import type { JSX } from 'solid-js';
-import {
-  createResource, createSignal, onMount, Suspense,
-} from 'solid-js';
+import { createResource, createSignal, onMount, Suspense } from 'solid-js';
 import { fn$ } from 'thaler';
 import { debounce } from 'thaler/utils';
 
 async function sleep<T>(value: T, ms: number): Promise<T> {
-  return new Promise<T>((res) => {
+  return new Promise<T>(res => {
     setTimeout(res, ms, value);
   });
 }
@@ -17,20 +15,22 @@ export default function Example(): JSX.Element {
   const prefix = 'Server Count';
 
   const serverCount = debounce(
-    fn$(async (value: number) => {
-      const delayed = await sleep(value, 1000);
-      console.log('Received', delayed);
-      return `${prefix}: ${delayed}`;
+    fn$((value: number) => {
+      console.log('Received', value);
+      return {
+        data: `${prefix}: ${value}`,
+        delayed: sleep(`Delayed ${prefix}: ${value}`, 1000),
+      };
     }),
     {
       key: () => 'example',
     },
   );
 
-  const [data] = createResource(state, async (value) => serverCount(value));
+  const [data] = createResource(state, async value => serverCount(value));
 
   function increment(): void {
-    setState((c) => c + 1);
+    setState(c => c + 1);
   }
 
   const example = fn$(async function* foo(items: string[]) {
@@ -52,12 +52,10 @@ export default function Example(): JSX.Element {
 
   return (
     <>
-      <button onClick={increment}>
-        {`Client Count: ${state()}`}
-      </button>
+      <button onClick={increment}>{`Client Count: ${state()}`}</button>
       <div>
         <Suspense fallback={<h1>Loading</h1>}>
-          <h1>{data()}</h1>
+          <h1>{data()?.data}</h1>
         </Suspense>
       </div>
     </>

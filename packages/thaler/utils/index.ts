@@ -56,7 +56,7 @@ interface DebounceData<R> {
   timeout: ReturnType<typeof setTimeout>;
 }
 
-export function debounce<T extends ((...args: any[]) => Promise<any>)>(
+export function debounce<T extends (...args: any[]) => Promise<any>>(
   callback: T,
   options: DebounceOptions<Parameters<T>>,
 ): T {
@@ -70,13 +70,13 @@ export function debounce<T extends ((...args: any[]) => Promise<any>)>(
     const instance = current.timeout;
     try {
       callback.apply(callback, args).then(
-        (value) => {
+        value => {
           if (instance === current.timeout) {
             current.deferred.resolve(value as ReturnType<T>);
             cache.delete(key);
           }
         },
-        (value) => {
+        value => {
           current.deferred.reject(value);
           cache.delete(key);
         },
@@ -96,21 +96,15 @@ export function debounce<T extends ((...args: any[]) => Promise<any>)>(
     let current = cache.get(key);
     if (current) {
       clearTimeout(current.timeout);
-      current.timeout = setTimeout(
-        () => {
-          resolveData(current!, key, args);
-        },
-        options.timeout || DEFAULT_DEBOUNCE_TIMEOUT,
-      );
+      current.timeout = setTimeout(() => {
+        resolveData(current!, key, args);
+      }, options.timeout || DEFAULT_DEBOUNCE_TIMEOUT);
     } else {
       const record: DebounceData<ReturnType<T>> = {
         deferred: createDeferred(),
-        timeout: setTimeout(
-          () => {
-            resolveData(record, key, args);
-          },
-          options.timeout || DEFAULT_DEBOUNCE_TIMEOUT,
-        ),
+        timeout: setTimeout(() => {
+          resolveData(record, key, args);
+        }, options.timeout || DEFAULT_DEBOUNCE_TIMEOUT),
       };
       current = record;
     }
@@ -127,7 +121,7 @@ interface ThrottleData<R> {
   deferred: Deferred<R>;
 }
 
-export function throttle<T extends ((...args: any[]) => Promise<any>)>(
+export function throttle<T extends (...args: any[]) => Promise<any>>(
   callback: T,
   options: ThrottleOptions<Parameters<T>>,
 ): T {
@@ -140,11 +134,11 @@ export function throttle<T extends ((...args: any[]) => Promise<any>)>(
   ): void {
     try {
       callback.apply(callback, args).then(
-        (value) => {
+        value => {
           current.deferred.resolve(value as ReturnType<T>);
           cache.delete(key);
         },
-        (value) => {
+        value => {
           current.deferred.reject(value);
           cache.delete(key);
         },
@@ -179,7 +173,7 @@ const DEFAULT_RETRY_COUNT = 10;
 const DEFAULT_RETRY_INTERVAL = 5000;
 const INITIAL_RETRY_INTERVAL = 10;
 
-export function retry<T extends ((...args: any[]) => Promise<any>)>(
+export function retry<T extends (...args: any[]) => Promise<any>>(
   callback: T,
   options: RetryOptions,
 ): T {
@@ -200,10 +194,7 @@ export function retry<T extends ((...args: any[]) => Promise<any>)>(
             backoff(
               Math.max(
                 INITIAL_RETRY_INTERVAL,
-                Math.min(
-                  opts.interval,
-                  time * 2,
-                ),
+                Math.min(opts.interval, time * 2),
               ),
               count + 1,
             );
@@ -211,12 +202,9 @@ export function retry<T extends ((...args: any[]) => Promise<any>)>(
         }
       }
       try {
-        callback.apply(callback, args).then(
-          (value) => {
-            deferred.resolve(value as ReturnType<T>);
-          },
-          handleError,
-        );
+        callback.apply(callback, args).then(value => {
+          deferred.resolve(value as ReturnType<T>);
+        }, handleError);
       } catch (err) {
         handleError(err);
       }
@@ -231,7 +219,7 @@ export function retry<T extends ((...args: any[]) => Promise<any>)>(
   }) as unknown as T;
 }
 
-export function timeout<T extends ((...args: any[]) => Promise<any>)>(
+export function timeout<T extends (...args: any[]) => Promise<any>>(
   callback: T,
   ms: number,
 ): T {
@@ -243,11 +231,11 @@ export function timeout<T extends ((...args: any[]) => Promise<any>)>(
 
     try {
       callback.apply(callback, args).then(
-        (value) => {
+        value => {
           deferred.resolve(value as ReturnType<T>);
           clearTimeout(timer);
         },
-        (value) => {
+        value => {
           deferred.reject(value);
           clearTimeout(timer);
         },

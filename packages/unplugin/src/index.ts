@@ -1,6 +1,8 @@
-import compile, { Options } from 'thaler/compiler';
+import { compile } from 'thaler/compiler';
+import type { Options } from 'thaler/compiler';
 import { createUnplugin } from 'unplugin';
-import { createFilter, FilterPattern } from '@rollup/pluginutils';
+import { createFilter } from '@rollup/pluginutils';
+import type { FilterPattern } from '@rollup/pluginutils';
 
 export interface ThalerPluginFilter {
   include?: FilterPattern;
@@ -38,7 +40,7 @@ const thalerPlugin = createUnplugin((options: ThalerPluginOptions) => {
           });
         }
         return undefined;
-      }
+      },
     },
     transformInclude(id) {
       return filter(id);

@@ -1,6 +1,4 @@
-import type { AsyncServerValue } from 'seroval';
-
-export type ThalerValue = AsyncServerValue;
+export type ThalerValue = any;
 export type MaybePromise<T> = T | Promise<T>;
 
 export type MaybeArray<T> = T | T[];
@@ -12,10 +10,14 @@ export interface ThalerContext {
 }
 
 export type ThalerServerHandler = (request: Request) => MaybePromise<Response>;
-export type ThalerPostHandler<P extends ThalerPostParam> =
-  (formData: P, ctx: ThalerContext) => MaybePromise<Response>;
-export type ThalerGetHandler<P extends ThalerGetParam> =
-  (search: P, ctx: ThalerContext) => MaybePromise<Response>;
+export type ThalerPostHandler<P extends ThalerPostParam> = (
+  formData: P,
+  ctx: ThalerContext,
+) => MaybePromise<Response>;
+export type ThalerGetHandler<P extends ThalerGetParam> = (
+  search: P,
+  ctx: ThalerContext,
+) => MaybePromise<Response>;
 
 export interface ThalerResponseInit {
   headers: Headers;
@@ -27,14 +29,22 @@ export interface ThalerFunctionalContext extends ThalerContext {
   response: ThalerResponseInit;
 }
 
-export type ThalerFnHandler<T, R> =
-  (value: T, ctx: ThalerFunctionalContext) => MaybePromise<R>;
-export type ThalerPureHandler<T, R> =
-  (value: T, ctx: ThalerFunctionalContext) => MaybePromise<R>;
-export type ThalerLoaderHandler<P extends ThalerGetParam, R> =
-  (value: P, ctx: ThalerFunctionalContext) => MaybePromise<R>;
-export type ThalerActionHandler<P extends ThalerPostParam, R> =
-  (value: P, ctx: ThalerFunctionalContext) => MaybePromise<R>;
+export type ThalerFnHandler<T, R> = (
+  value: T,
+  ctx: ThalerFunctionalContext,
+) => MaybePromise<R>;
+export type ThalerPureHandler<T, R> = (
+  value: T,
+  ctx: ThalerFunctionalContext,
+) => MaybePromise<R>;
+export type ThalerLoaderHandler<P extends ThalerGetParam, R> = (
+  value: P,
+  ctx: ThalerFunctionalContext,
+) => MaybePromise<R>;
+export type ThalerActionHandler<P extends ThalerPostParam, R> = (
+  value: P,
+  ctx: ThalerFunctionalContext,
+) => MaybePromise<R>;
 
 export type ThalerGenericHandler =
   | ThalerServerHandler
@@ -56,14 +66,16 @@ export interface ThalerServerFunction extends ThalerBaseFunction {
 
 export type ThalerPostInit = Omit<RequestInit, 'method' | 'body'>;
 
-export interface ThalerPostFunction<P extends ThalerPostParam> extends ThalerBaseFunction {
+export interface ThalerPostFunction<P extends ThalerPostParam>
+  extends ThalerBaseFunction {
   type: 'post';
   (formData: P, init?: ThalerPostInit): Promise<Response>;
 }
 
 export type ThalerGetInit = Omit<RequestInit, 'method' | 'body'>;
 
-export interface ThalerGetFunction<P extends ThalerGetParam> extends ThalerBaseFunction {
+export interface ThalerGetFunction<P extends ThalerGetParam>
+  extends ThalerBaseFunction {
   type: 'get';
   (search: P, init?: ThalerGetInit): Promise<Response>;
 }

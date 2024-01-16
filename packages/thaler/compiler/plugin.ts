@@ -1,13 +1,15 @@
 import type * as babel from '@babel/core';
 import { addDefault, addNamed } from '@babel/helper-module-imports';
 import * as t from '@babel/types';
-import { parse as parsePath } from 'path';
+import { parse as parsePath } from 'node:path';
 import { getImportSpecifierName } from './checks';
 import getForeignBindings from './get-foreign-bindings';
 import unwrapNode from './unwrap-node';
 import xxHash32 from './xxhash32';
 import type { APIRegistration, ImportDefinition } from './imports';
 import { API } from './imports';
+import { unexpectedArgumentLength, unexpectedType } from './errors';
+import unwrapPath from './unwrap-path';
 
 interface InternalRegistration {
   clone: ImportDefinition;
@@ -79,17 +81,16 @@ function getImportIdentifier(
   path: babel.NodePath,
   registration: ImportDefinition,
 ): t.Identifier {
-  const name = registration.kind === 'named'
-    ? registration.name
-    : 'default';
+  const name = registration.kind === 'named' ? registration.name : 'default';
   const target = `${registration.source}[${name}]`;
   const current = state.imports.get(target);
   if (current) {
     return current;
   }
-  const newID = (registration.kind === 'named')
-    ? addNamed(path, registration.name, registration.source)
-    : addDefault(path, registration.source);
+  const newID =
+    registration.kind === 'named'
+      ? addNamed(path, registration.name, registration.source)
+      : addDefault(path, registration.source);
   state.imports.set(target, newID);
   return newID;
 }
@@ -102,11 +103,12 @@ function registerFunctionSpecifier(
   for (let i = 0, len = path.node.specifiers.length; i < len; i++) {
     const specifier = path.node.specifiers[i];
     switch (specifier.type) {
-      case 'ImportDefaultSpecifier':
+      case 'ImportDefaultSpecifier': {
         if (registration.target.kind === 'default') {
           ctx.registrations.identifiers.set(specifier.local, registration);
         }
         break;
+      }
       case 'ImportNamespaceSpecifier': {
         let current = ctx.registrations.namespaces.get(specifier.local);
         if (!current) {
@@ -114,24 +116,19 @@ function registerFunctionSpecifier(
         }
         current.push(registration);
         ctx.registrations.namespaces.set(specifier.local, current);
-      }
         break;
+      }
       case 'ImportSpecifier': {
         const key = getImportSpecifierName(specifier);
         if (
-          (
-            registration.target.kind === 'named'
-            && key === registration.target.name
-          )
-          || (
-            registration.target.kind === 'default'
-            && key === 'default'
-          )
+          (registration.target.kind === 'named' &&
+            key === registration.target.name) ||
+          (registration.target.kind === 'default' && key === 'default')
         ) {
           ctx.registrations.identifiers.set(specifier.local, registration);
         }
-      }
         break;
+      }
       default:
         break;
     }
@@ -145,14 +142,16 @@ function registerRefSpecifier(
   for (let i = 0, len = path.node.specifiers.length; i < len; i++) {
     const specifier = path.node.specifiers[i];
     switch (specifier.type) {
-      case 'ImportNamespaceSpecifier':
+      case 'ImportNamespaceSpecifier': {
         ctx.refRegistry.namespaces.add(specifier.local);
         break;
-      case 'ImportSpecifier':
+      }
+      case 'ImportSpecifier': {
         if (getImportSpecifierName(specifier) === 'ref$') {
           ctx.refRegistry.identifiers.add(specifier.local);
         }
         break;
+      }
       default:
         break;
     }
@@ -189,27 +188,64 @@ function getRootStatementPath(path: babel.NodePath): babel.NodePath {
   return path;
 }
 
-function getDescriptiveName(path: babel.NodePath): string {
+function getDescriptiveName(path: babel.NodePath, defaultName: string): string {
   let current: babel.NodePath | null = path;
   while (current) {
     switch (current.node.type) {
       case 'FunctionDeclaration':
-      case 'FunctionExpression':
+      case 'FunctionExpression': {
         if (current.node.id) {
           return current.node.id.name;
         }
         break;
-      case 'VariableDeclarator':
+      }
+      case 'VariableDeclarator': {
         if (current.node.id.type === 'Identifier') {
           return current.node.id.name;
         }
         break;
+      }
+      case 'ClassPrivateMethod':
+      case 'ClassMethod':
+      case 'ObjectMethod': {
+        switch (current.node.key.type) {
+          case 'Identifier':
+            return current.node.key.name;
+          case 'PrivateName':
+            return current.node.key.id.name;
+          default:
+            break;
+        }
+        break;
+      }
       default:
         break;
     }
     current = current.parentPath;
   }
-  return 'anonymous';
+  return defaultName;
+}
+
+function extractThalerFunction(
+  path: babel.NodePath<t.CallExpression | t.OptionalCallExpression>,
+): babel.NodePath<t.ArrowFunctionExpression | t.FunctionExpression> {
+  const args = path.get('arguments');
+  if (args.length === 0) {
+    throw unexpectedArgumentLength(path, args.length, 1);
+  }
+  const arg = args[0];
+  const argument = unwrapPath(arg, t.isFunction);
+  if (
+    argument &&
+    (argument.isArrowFunctionExpression() || argument.isFunctionExpression())
+  ) {
+    return argument;
+  }
+  throw unexpectedType(
+    arg,
+    arg.node.type,
+    'ArrowFunctionExpression | FunctionExpression',
+  );
 }
 
 function createThalerFunction(
@@ -217,99 +253,86 @@ function createThalerFunction(
   path: babel.NodePath<t.CallExpression | t.OptionalCallExpression>,
   registration: APIRegistration,
 ): void {
-  const argument = path.get('arguments')[0];
-  if (
-    argument
-    && (
-      argument.isArrowFunctionExpression()
-      || argument.isFunctionExpression()
-    )
-  ) {
-    // Create an ID
-    let id = `${ctx.prefix}${ctx.count}`;
-    if (ctx.opts.env !== 'production') {
-      id += `-${getDescriptiveName(argument)}`;
-    }
-    ctx.count += 1;
-    // Create the call expression
-    const args: t.Expression[] = [t.stringLiteral(id)];
-    if (ctx.opts.mode === 'server') {
-      // Hoist the argument
-      args.push(argument.node);
-    }
+  const argument = extractThalerFunction(path);
+  // Create an ID
+  let id = `${ctx.prefix}${ctx.count}`;
+  if (ctx.opts.env !== 'production') {
+    id += `-${getDescriptiveName(argument, 'anonymous')}`;
+  }
+  ctx.count += 1;
+  // Create the call expression
+  const registerArgs: t.Expression[] = [t.stringLiteral(id)];
+  if (ctx.opts.mode === 'server') {
+    // Hoist the argument
+    registerArgs.push(argument.node);
+  }
 
-    // Create registration call
-    const registerID = path.scope.generateUidIdentifier(registration.name);
-    const register = t.callExpression(
+  // Create registration call
+  const registerID = path.scope.generateUidIdentifier(registration.name);
+  const register = t.callExpression(
+    getImportIdentifier(
+      ctx,
+      path,
+      ctx.opts.mode === 'server' ? registration.server : registration.client,
+    ),
+    registerArgs,
+  );
+  // Locate root statement (the top-level statement)
+  const rootStatement = getRootStatementPath(path);
+  // Push the declaration
+  rootStatement.insertBefore(
+    t.variableDeclaration('const', [
+      t.variableDeclarator(registerID, register),
+    ]),
+  );
+  // Setup for clone call
+  const cloneArgs: t.Expression[] = [registerID];
+  // Collect bindings for scoping
+  if (registration.scoping) {
+    const scope = getForeignBindings(argument);
+    cloneArgs.push(t.arrowFunctionExpression([], t.arrayExpression(scope)));
+    if (scope.length) {
+      // Add scoping to the arrow function
+      if (ctx.opts.mode === 'server') {
+        const statement = t.isStatement(argument.node.body)
+          ? argument.node.body
+          : t.blockStatement([t.returnStatement(argument.node.body)]);
+        statement.body = [
+          t.variableDeclaration('const', [
+            t.variableDeclarator(
+              t.arrayPattern(scope),
+              t.callExpression(
+                getImportIdentifier(
+                  ctx,
+                  path,
+                  ctx.opts.mode === 'server'
+                    ? SERVER_IMPORTS.scope
+                    : CLIENT_IMPORTS.scope,
+                ),
+                [],
+              ),
+            ),
+          ]),
+          ...statement.body,
+        ];
+
+        argument.node.body = statement;
+      }
+    }
+  }
+  // Replace with clone
+  path.replaceWith(
+    t.callExpression(
       getImportIdentifier(
         ctx,
         path,
         ctx.opts.mode === 'server'
-          ? registration.server
-          : registration.client,
+          ? SERVER_IMPORTS.clone
+          : CLIENT_IMPORTS.clone,
       ),
-      args,
-    );
-    // Locate root statement (the top-level statement)
-    const rootStatement = getRootStatementPath(path);
-    // Push the declaration
-    rootStatement.insertBefore(
-      t.variableDeclaration(
-        'const',
-        [t.variableDeclarator(registerID, register)],
-      ),
-    );
-    // Setup for clone call
-    const cloneArgs: t.Expression[] = [registerID];
-    // Collect bindings for scoping
-    if (registration.scoping) {
-      const scope = getForeignBindings(argument);
-      cloneArgs.push(t.arrowFunctionExpression([], t.arrayExpression(scope)));
-      if (scope.length) {
-        // Add scoping to the arrow function
-        if (ctx.opts.mode === 'server') {
-          const statement = t.isStatement(argument.node.body)
-            ? argument.node.body
-            : t.blockStatement([
-              t.returnStatement(argument.node.body),
-            ]);
-          statement.body = [
-            t.variableDeclaration(
-              'const',
-              [
-                t.variableDeclarator(
-                  t.arrayPattern(scope),
-                  t.callExpression(getImportIdentifier(
-                    ctx,
-                    path,
-                    ctx.opts.mode === 'server'
-                      ? SERVER_IMPORTS.scope
-                      : CLIENT_IMPORTS.scope,
-                  ), []),
-                ),
-              ],
-            ),
-            ...statement.body,
-          ];
-
-          argument.node.body = statement;
-        }
-      }
-    }
-    // Replace with clone
-    path.replaceWith(
-      t.callExpression(
-        getImportIdentifier(
-          ctx,
-          path,
-          ctx.opts.mode === 'server'
-            ? SERVER_IMPORTS.clone
-            : CLIENT_IMPORTS.clone,
-        ),
-        cloneArgs,
-      ),
-    );
-  }
+      cloneArgs,
+    ),
+  );
 }
 
 function createRefFunction(
@@ -324,9 +347,7 @@ function createRefFunction(
       getImportIdentifier(
         ctx,
         path,
-        ctx.opts.mode === 'server'
-          ? SERVER_IMPORTS.ref
-          : CLIENT_IMPORTS.ref,
+        ctx.opts.mode === 'server' ? SERVER_IMPORTS.ref : CLIENT_IMPORTS.ref,
       ),
       [t.stringLiteral(id), ...path.node.arguments],
     ),
@@ -352,9 +373,9 @@ function transformCall(
   }
   const trueMemberExpr = unwrapNode(path.node.callee, t.isMemberExpression);
   if (
-    trueMemberExpr
-    && !trueMemberExpr.computed
-    && t.isIdentifier(trueMemberExpr.property)
+    trueMemberExpr &&
+    !trueMemberExpr.computed &&
+    t.isIdentifier(trueMemberExpr.property)
   ) {
     const obj = unwrapNode(trueMemberExpr.object, t.isIdentifier);
     if (obj) {
@@ -370,10 +391,7 @@ function transformCall(
             }
           }
         }
-        if (
-          ctx.refRegistry.namespaces.has(binding)
-          && propName === 'ref$'
-        ) {
+        if (ctx.refRegistry.namespaces.has(binding) && propName === 'ref$') {
           createRefFunction(ctx, path);
         }
       }

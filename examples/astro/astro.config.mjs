@@ -1,7 +1,7 @@
 import { defineConfig } from 'astro/config';
 
-import solidJs from "@astrojs/solid-js";
-import tailwind from "@astrojs/tailwind";
+import solidJs from '@astrojs/solid-js';
+import tailwind from '@astrojs/tailwind';
 import node from '@astrojs/node';
 import thalerPlugin from 'unplugin-thaler';
 
@@ -10,7 +10,7 @@ export default defineConfig({
   integrations: [solidJs(), tailwind()],
   output: 'server',
   adapter: node({
-    mode: 'standalone'
+    mode: 'standalone',
   }),
   vite: {
     plugins: [
