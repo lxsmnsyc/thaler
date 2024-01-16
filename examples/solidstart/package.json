@@ -1,6 +1,6 @@
 {
   "name": "solid-start-demo",
-  "version": "0.8.1",
+  "version": "0.9.0",
   "private": true,
   "scripts": {
     "dev": "vinxi dev",
@@ -12,16 +12,16 @@
     "@types/node": "^20.11.3",
     "postcss": "^8.4.25",
     "typescript": "^5.3.3",
-    "unplugin-thaler": "0.8.1",
+    "unplugin-thaler": "0.9.0",
     "vite": "^4.4.11"
   },
   "dependencies": {
-    "@solidjs/start": "^0.4.9",
-    "solid-js": "^1.8.11",
-    "vinxi": "^0.1.4",
     "@solidjs/meta": "^0.29.3",
     "@solidjs/router": "^0.10.9",
-    "thaler": "0.8.1"
+    "@solidjs/start": "^0.4.9",
+    "solid-js": "^1.8.11",
+    "thaler": "0.9.0",
+    "vinxi": "^0.1.4"
   },
   "engines": {
     "node": ">=16.8"
